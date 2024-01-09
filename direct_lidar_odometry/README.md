@@ -1,5 +1,20 @@
 # Direct LiDAR Odometry: <br> Fast Localization with Dense Point Clouds
+### Testing on kitti
+```sh
+roslaunch direct_lidar_odometry dlo.launch pointcloud_topic:=/kitti_velo
+```
+```sh
+# APE and Map
+evo_ape kitti poses.txt kitti_traj.txt -va --plot --plot_mode xz
+# xyz
+evo_traj kitti kitti_traj.txt --ref=poses.txt -p --plot_mode=xz -a
+```
+| APE   | Map | XYZ(y是主观z轴) |
+| :------------------: | :------------------------------: | :------------------------------: |
+| <img src="./data/ape.png" height="400"> | <img src="./data/ape2.png" height="400"> | <img src="./data/xyz.png" height="400"> |
 
+
+# Official Page
 #### [[IEEE RA-L](https://ieeexplore.ieee.org/document/9681177)] [[ArXiv](https://arxiv.org/abs/2110.00605)] [[Video](https://www.youtube.com/watch?v=APot6QP_wvg)] [[Code](https://github.com/vectr-ucla/direct_lidar_odometry)]
 
 DLO is a lightweight and computationally-efficient frontend LiDAR odometry solution with consistent and accurate localization. It features several algorithmic innovations that increase speed, accuracy, and robustness of pose estimation in perceptually-challenging environments and has been extensively tested on aerial and legged robots.

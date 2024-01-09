@@ -114,7 +114,7 @@ bool LsqRegistration<PointTarget, PointSource>::step_gn(Eigen::Isometry3d& x0, E
   // info：通过多线程对H矩阵和b矩阵进行计算   此外，这是个虚函数，每个子类需要自己进行实现
   double y0 = linearize(x0, &H, &b);
 
-  // info：求解增量delta x
+  // info：求解增量delta x    link：https://www.cnblogs.com/feifanrensheng/articles/8510702.html
   Eigen::LDLT<Eigen::Matrix<double, 6, 6>> solver(H);
   Eigen::Matrix<double, 6, 1> d = solver.solve(-b);
 
