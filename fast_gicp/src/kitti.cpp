@@ -89,7 +89,7 @@ int main(int argc, char** argv) {
   // fast_gicp::NDTCuda<pcl::PointXYZ, pcl::PointXYZ> gicp;
   // gicp.setResolution(1.0);
   // gicp.setNearestNeighborSearchMethod(fast_gicp::NearestNeighborMethod::GPU_RBF_KERNEL);
-  // 设置找对应点是的最大距离阈值，超过则忽略 
+  // info：设置找对应点是的最大距离阈值，超过则忽略 
   gicp.setMaxCorrespondenceDistance(1.0);
 
   // set initial frame as target
@@ -103,7 +103,7 @@ int main(int argc, char** argv) {
   poses[0].setIdentity();
 
   // trajectory for visualization
-  // 用于pcl可视化position
+  // info：用于pcl可视化position
   pcl::PointCloud<pcl::PointXYZ>::Ptr trajectory(new pcl::PointCloud<pcl::PointXYZ>);
   trajectory->push_back(pcl::PointXYZ(0.0f, 0.0f, 0.0f));
 
@@ -111,7 +111,7 @@ int main(int argc, char** argv) {
   vis.addPointCloud<pcl::PointXYZ>(trajectory, "trajectory");
 
   // for calculating FPS
-  // 计算帧率
+  // info：计算帧率
   boost::circular_buffer<std::chrono::high_resolution_clock::time_point> stamps(30);
   stamps.push_back(std::chrono::high_resolution_clock::now());
 
@@ -125,8 +125,9 @@ int main(int argc, char** argv) {
     // align and swap source and target cloud for next registration
     // info：配准函数
     pcl::PointCloud<pcl::PointXYZ>::Ptr aligned(new pcl::PointCloud<pcl::PointXYZ>);
-    // info：继承registration.hpp中的pcl::Registration<PointSource, PointTarget, Scalar>类中的align函数
+    // info：继承registration.hpp中的pcl::Registration<PointSource, PointTarget, Scalar>类中的align函数， 内部自己实现了 computeTransformation 关键函数
     gicp.align(*aligned);
+    // info：交换Source 和 Target，想当于上一次的source（已叠加位姿）作为下一次的target
     gicp.swapSourceAndTarget();
 
     // accumulate pose

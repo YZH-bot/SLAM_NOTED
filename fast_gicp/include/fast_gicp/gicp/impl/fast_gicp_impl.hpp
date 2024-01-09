@@ -110,7 +110,7 @@ void FastGICP<PointSource, PointTarget, SearchMethodSource, SearchMethodTarget>:
   if (target_covs_.size() != target_->size()) {
     calculate_covariances(target_, *search_target_, target_covs_);
   }
-
+  // info：使用作用域分辨符访问父类中的同名函数
   LsqRegistration<PointSource, PointTarget>::computeTransformation(output, guess);
 }
 
@@ -170,6 +170,7 @@ double FastGICP<PointSource, PointTarget, SearchMethodSource, SearchMethodTarget
     bs[i].setZero();
   }
 
+// info：多线程归约 sum_errors
 #pragma omp parallel for num_threads(num_threads_) reduction(+ : sum_errors) schedule(guided, 8)
   for (int i = 0; i < input_->size(); i++) {
     int target_index = correspondences_[i];
@@ -192,12 +193,12 @@ double FastGICP<PointSource, PointTarget, SearchMethodSource, SearchMethodTarget
       continue;
     }
 
+    // info：左扰动求解形式 [(Rq)^, -I]
     Eigen::Matrix<double, 4, 6> dtdx0 = Eigen::Matrix<double, 4, 6>::Zero();
     dtdx0.block<3, 3>(0, 0) = skewd(transed_mean_A.head<3>());
     dtdx0.block<3, 3>(0, 3) = -Eigen::Matrix3d::Identity();
 
     Eigen::Matrix<double, 4, 6> jlossexp = dtdx0;
-
     Eigen::Matrix<double, 6, 6> Hi = jlossexp.transpose() * mahalanobis_[i] * jlossexp;
     Eigen::Matrix<double, 6, 1> bi = jlossexp.transpose() * mahalanobis_[i] * error;
 

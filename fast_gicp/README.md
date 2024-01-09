@@ -1,4 +1,17 @@
 # fast_gicp
+## 笔记
+### 1. fastgicp 算法代码解析：
+- **kitti.cpp文件**
+![proctime](doc/kitti_cpp.png)
+
+- **aligned函数 ---> pcl::align ---> FastGICP::computeTransformation ---> LsqRegistration::computeTransformation**
+![proctime](doc/fast_gicp_lsq_cpp.png)
+
+- **step_optimize函数**
+![proctime](doc/step_optimize_hpp.png)
+
+
+## Official Pages
 
 This package is a collection of GICP-based fast point cloud registration algorithms. It constains a multi-threaded GICP as well as multi-thread and GPU implementations of our voxelized GICP (VGICP) algorithm. All the implemented algorithms have the PCL registration interface so that they can be used as an inplace replacement for GICP in PCL.
 

@@ -53,6 +53,7 @@ template <typename PointTarget, typename PointSource>
 void LsqRegistration<PointTarget, PointSource>::computeTransformation(PointCloudSource& output, const Matrix4& guess) {
   Eigen::Isometry3d x0 = Eigen::Isometry3d(guess.template cast<double>());
 
+  // info：用于LM优化，GN优化不会用到
   lm_lambda_ = -1.0;
   converged_ = false;
 
@@ -62,18 +63,21 @@ void LsqRegistration<PointTarget, PointSource>::computeTransformation(PointCloud
     std::cout << "********************************************" << std::endl;
   }
 
+  // info：优化迭代过程
   for (int i = 0; i < max_iterations_ && !converged_; i++) {
     nr_iterations_ = i;
 
     Eigen::Isometry3d delta;
+    // info：一步优化
     if (!step_optimize(x0, delta)) {
       std::cerr << "lm not converged!!" << std::endl;
       break;
     }
 
+    // info：判断是否收敛
     converged_ = is_converged(delta);
   }
-
+  // info：迭代优化完毕，将 input 转化到当前位姿，每次计算的都是相对位姿然后，进行叠加的到当前位姿
   final_transformation_ = x0.cast<float>().matrix();
   pcl::transformPointCloud(*input_, output, final_transformation_);
 }
@@ -92,6 +96,7 @@ bool LsqRegistration<PointTarget, PointSource>::is_converged(const Eigen::Isomet
 
 template <typename PointTarget, typename PointSource>
 bool LsqRegistration<PointTarget, PointSource>::step_optimize(Eigen::Isometry3d& x0, Eigen::Isometry3d& delta) {
+  // info：选择使用 LM 还是 GN
   switch (lsq_optimizer_type_) {
     case LSQ_OPTIMIZER_TYPE::LevenbergMarquardt:
       return step_lm(x0, delta);
