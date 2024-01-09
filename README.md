@@ -3,4 +3,5 @@
 - **fast_gicp**: [code解析详情：fastgicp](https://github.com/YZH-bot/SLAM_NOTED/tree/master/fast_gicp)
 - **LIO-SAM**：[todo]
 - **direct_lidar_odemetry**：[todo]
+- **direct_inertial_lidar_odemetry**：[todo]
 

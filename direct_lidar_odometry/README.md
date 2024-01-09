@@ -5,7 +5,7 @@ roslaunch direct_lidar_odometry dlo.launch pointcloud_topic:=/kitti_velo
 ```
 ```sh
 # APE and Map
-evo_ape kitti poses.txt kitti_traj.txt -va --plot --plot_mode xz
+evo_ape kitti poses.txt kitti_traj.txt -va --plot --plot_mode xz -r full
 # xyz
 evo_traj kitti kitti_traj.txt --ref=poses.txt -p --plot_mode=xz -a
 ```
