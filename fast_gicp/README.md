@@ -4,11 +4,17 @@
 - **kitti.cpp文件**
 ![proctime](doc/kitti_cpp.png)
 
-- **aligned函数 ---> pcl::align ---> FastGICP::computeTransformation ---> LsqRegistration::computeTransformation**
+- **aligned 函数 ---> pcl::align ---> FastGICP::computeTransformation ---> LsqRegistration::computeTransformation**
 ![proctime](doc/fast_gicp_lsq_cpp.png)
 
-- **step_optimize函数**
+- **step_optimize 函数**
 ![proctime](doc/step_optimize_hpp.png)
+
+- **step_gn 函数**
+![proctime](doc/step_gn_func.png)
+
+- **FastGICP::linearize 函数**：通过多线程对H矩阵和b矩阵进行计算   此外，这是个虚函数，每个子类需要自己进行实现
+![proctime](doc/fast_gicp_linearize_func.png)
 
 
 ## Official Pages

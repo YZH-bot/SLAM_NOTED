@@ -144,7 +144,7 @@ int main(int argc, char** argv) {
   }
 
   // save the estimated poses
-  std::ofstream ofs("/tmp/traj.txt");
+  std::ofstream ofs("/home/robot-nuc12/catkin_ws/src/slam/SLAM_NOTED/fast_gicp/data/traj.txt");
   for (const auto& pose : poses) {
     for (int i = 0; i < 3; i++) {
       for (int j = 0; j < 4; j++) {

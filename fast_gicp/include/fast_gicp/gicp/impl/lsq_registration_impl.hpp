@@ -118,6 +118,7 @@ bool LsqRegistration<PointTarget, PointSource>::step_gn(Eigen::Isometry3d& x0, E
   Eigen::LDLT<Eigen::Matrix<double, 6, 6>> solver(H);
   Eigen::Matrix<double, 6, 1> d = solver.solve(-b);
 
+  // info：se3转SE3
   delta = se3_exp(d);
 
   x0 = delta * x0;

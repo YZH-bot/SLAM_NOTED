@@ -77,9 +77,11 @@ inline Eigen::Quaterniond so3_exp(const Eigen::Vector3d& omega) {
 }
 
 // Rotation-first
+// info：se3转SE3
 inline Eigen::Isometry3d se3_exp(const Eigen::Matrix<double, 6, 1>& a) {
   using std::cos;
   using std::sin;
+  // info：旋转向量
   const Eigen::Vector3d omega = a.head<3>();
 
   double theta = std::sqrt(omega.dot(omega));
@@ -93,7 +95,9 @@ inline Eigen::Isometry3d se3_exp(const Eigen::Matrix<double, 6, 1>& a) {
     /// Note: That is an accurate expansion!
   } else {
     const double theta_sq = theta * theta;
-    V = (Eigen::Matrix3d::Identity() + (1.0 - cos(theta)) / (theta_sq)*Omega + (theta - sin(theta)) / (theta_sq * theta) * Omega_sq);
+    // info：李代数se3指数映射精确展开，参见slam14讲4.2.2   这里不一致，仔细对比会发现少了一个单位阵I   但是经过对比，影响不大？？？
+    // V = (Eigen::Matrix3d::Identity() + (1.0 - cos(theta)) / (theta_sq)*Omega + (theta - sin(theta)) / (theta_sq * theta) * Omega_sq);
+    V = (Eigen::Matrix3d::Identity() + (1.0 - cos(theta)) / (theta_sq)*Omega + (theta - sin(theta)) / theta * (Omega_sq / theta_sq - Eigen::Matrix3d::Identity()));
   }
 
   Eigen::Isometry3d se3 = Eigen::Isometry3d::Identity();
