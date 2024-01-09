@@ -11,7 +11,7 @@ evo_traj kitti kitti_traj.txt --ref=poses.txt -p --plot_mode=xz -a
 ```
 | APE   | Map | XYZ(y是主观z轴) |
 | :------------------: | :------------------------------: | :------------------------------: |
-| <img src="./data/ape.png" height="400"> | <img src="./data/ape2.png" height="400"> | <img src="./data/xyz.png" height="400"> |
+| <img src="./data/ape.png" height="200"> | <img src="./data/ape2.png" height="200"> | <img src="./data/xyz.png" height="200"> |
 
 
 # Official Page
