@@ -29,8 +29,8 @@ $$
 $$
 \begin{equation}
 \begin{split}
-d_{i}^{(\mathbf{T}^{*})}& \sim\mathcal{N}(\hat{b_i}-(\mathbf{T}^*)\hat{a_i},C_i^B+(\mathbf{T}^*)C_i^A(\mathbf{T}^*)^T)  \\
-&=\mathcal{N}(0,C_i^B+(\mathbf{T}^*)C_i^A(\mathbf{T}^*)^T)
+d_{i}^{({T}^{*})}& \sim{N}(\hat{b_i}-({T}^*)\hat{a_i},C_i^B+({T}^*)C_i^A({T}^*)^T)  \\
+&={N}(0,C_i^B+({T}^*)C_i^A({T}^*)^T)
 \end{split}
 \end{equation}
 $$
