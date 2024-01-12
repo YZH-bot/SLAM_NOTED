@@ -20,13 +20,10 @@ $$
 定义它们之间的距离残差为 $d_i^{(\pmb{T})} = \hat{\pmb{b}}_i - \pmb{T^*}\hat{\pmb{a}}_i$，假设 $\pmb{a}_i$ 和 $\pmb{b}_i$ 独立，则：
 
 $$
-\begin{equation}
-\begin{split}
-\frac{\partial^2 f}{\partial{x^2}} &= \frac{\partial(\Delta_x f(i,j))}{\partial x} = \frac{\partial(f(i+1,j)-f(i,j))}{\partial x} \\
-&= \frac{\partial f(i+1,j)}{\partial x} - \frac{\partial f(i,j)}{\partial x} \\
-&= N (0, C_i^B+T^*{C_i^A}T^*1)\\
-\end{split}
-\end{equation}
+\begin{equation}\begin{split}
+d_{i}^{(\mathbf{T})}& \sim\mathcal{N}\left(\hat{b_i}-\left(\mathbf{T}\right)\hat{a_i},C_i^B+\left(\mathbf{T}\right)C_i^A\left(\mathbf{T}\right)^T\right)  \\
+&=\mathcal{N}\left(0,C_i^B+\left(\mathbf{T}\right)C_i^A\left(\mathbf{T}\right)^T\right)
+\end{split}\end{equation}
 $$
 
 GICP通过最大似然估计，找到置信最高的变换矩阵 $\pmb{T}$：
@@ -43,7 +40,7 @@ $$
 此外:
 * 点到点匹配 ➡ $C_i^B = I,\space C_i^A = 0$
 * 点到面匹配 ➡ $C_i^B = (\pmb{n}_i\pmb{n}_i^T)^{-1},\space C_i^A = 0$
-  * 其中，$\mathbf{n}_i \mathbf{n}_i^T$ 其实是一个正交投影矩阵 ( $P = P^T, P^2 = P$ )  ，相当于把点与点之间的距离投影到法向量上，得到点到面的距离。
+  * 其中，$\mathbf{n}_i\mathbf{n}_i$ 其实是一个正交投影矩阵 ( $P = P^T, P^2 = P$ )  ，相当于把点与点之间的距离投影到法向量上，得到点到面的距离。
 * 面到面匹配 ➡ GICP
 
 ## 附录
