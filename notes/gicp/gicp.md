@@ -57,7 +57,6 @@ $$
 \mathbf{T}& =\mathop{\arg\max}\limits_{\mathbf{T}}\prod_ip\left(d_i^{(\mathbf{T})}\right)  \\
 &={\mathop{\arg\max}\limits_{\mathbf{T}}}\sum_i\log\left(p\left(d_i^{(\mathbf{T})}\right)\right) \\
 &=\mathop{\arg\max}\limits_{\mathbf{T}}\sum_i{ \log ( \frac{ 1 }{ \sqrt {(2\pi)^ k\mathrm{C}_\mathrm{i}^\mathrm{B}+\mathbf{T}\mathrm{C}_i^\mathrm{A}\mathbf{T}^\mathrm{T}}})} \\
-&-\frac12(\mathrm{d_i^{(T)}-(\hat{b_i}-T\hat{a_i})})^{\mathrm{T}}(\mathrm{C_i^B+TC_i^AT^T})^{-1}(\mathrm{d_i^{(T)}-(\hat{b_i}-T\hat{a_i})}) \\
 &=\mathop{\arg\max}\limits_{\mathbf{T}}\sum_i {d_i^{(\mathbf{T})}}^T\left(C_i^B+\mathbf{T}C_i^A\mathbf{T}^T\right)^{-1}d_i^{(\mathbf{T})}\\
 \end{aligned}\end{equation}
 $$
@@ -68,7 +67,7 @@ $$
 \text{T}&=\mathop{\arg\max}\limits_{\mathbf{T}}\prod_{\mathrm{i}}\text{p}(\mathrm{d}_{\mathrm{i}}^{(\mathbf{T})})  \\
 &=\mathop{\arg\max}\limits_{\mathbf{T}}\sum_{\mathrm{i}}\log(\mathrm{p(d_i^{(T)})}) \\
 &=\mathop{\arg\max}\limits_{\mathbf{T}}\sum_{\mathrm{i}}{ \log ( \frac 1 { \sqrt { ( 2 \pi ) ^ \mathrm{k}|\mathrm{C}_i^\mathrm{B}+\mathbf{T}\mathrm{C}_{i}^\mathrm{A}\mathbf{T}^\mathrm{T}|}})} \\
-
+&-\frac12(\mathrm{d_i^{(T)}-(\hat{b_i}-T\hat{a_i})})^{\mathrm{T}}(\mathrm{C_i^B+TC_i^AT^T})^{-1}(\mathrm{d_i^{(T)}-(\hat{b_i}-T\hat{a_i})}) \\
 &={\mathop{\arg\max}\limits_{\mathbf{T}}}\sum_\text{i}{ \log ( \frac 1 { \sqrt { ( 2 \pi ) ^ \mathrm{k}|\mathrm{C}_{i}^\mathrm{B}+\mathbf{T}\mathrm{C}_{i}^\mathrm{A}\mathbf{T}^\mathrm{T}|}})} \\
 &-\frac12{d_i^{(T)^T}(C_i^B+TC_i^AT^T)^{-1}d_i^{(T)}} \\
 &={\mathop{\arg\max}\limits_{\mathbf{T}}}\sum_\text{i}{ - \frac 1 2 }{d_i^{(T)}}^{\mathrm{T}}({C_i^B}+{TC_i^A}{T^T})^{-1}{d_i^{(T)}} \\
