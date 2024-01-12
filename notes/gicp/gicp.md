@@ -68,14 +68,5 @@ $$
 $$
 
 $$
-\begin{aligned}
-\mathrm{T} & =\underset{\mathbf{T}}{\arg \max } \prod_{\mathrm{i}} \mathrm{p}\left(\mathrm{d}_{\mathrm{i}}^{(\mathbf{T})}\right) \\
-& =\underset{\mathbf{T}}{\arg \max } \sum_{\mathrm{i}} \log \left(\mathrm{p}\left(\mathrm{d}_{\mathrm{i}}^{(\mathrm{T})}\right)\right) \\
-& =\underset{\mathbf{T}}{\arg \max } \sum_{\mathrm{i}} \log \left(\frac{1}{\sqrt{(2 \pi)^{\mathrm{k}}\left|\mathrm{C}_{i}^{\mathrm{B}}+\mathbf{T C}_{i}^{\mathrm{A}} \mathbf{T}^{\mathrm{T}}\right|}}\right) \\
-& -\frac{1}{2}\left(\mathrm{~d}_{\mathrm{i}}^{(\mathrm{T})}-\left(\hat{\mathrm{b}}_{\mathrm{i}}-\mathrm{Ta}_{\mathrm{i}}\right)^{\mathrm{T}}\left(\mathrm{C}_{\mathrm{i}}^{\mathrm{B}}+\mathrm{TC}_{\mathrm{i}}^{\mathrm{A}} \mathrm{T}^{\mathrm{T}}\right)^{-1}\left(\mathrm{~d}_{\mathrm{i}}^{(\mathrm{T})}-\left(\hat{\mathrm{b}}_{\mathrm{i}}-\mathrm{T} \hat{\mathrm{a}}_{\mathrm{i}}\right)\right)\right. \\
-& =\underset{\mathbf{T}}{\arg \max } \sum_{\mathrm{i}} \log \left(\frac{1}{\sqrt{(2 \pi)^{\mathrm{k}}\left|\mathrm{C}_{i}^{\mathrm{B}}+\mathbf{T} \mathbf{T}_{i}^{\mathrm{A}} \mathbf{T}^{\mathrm{T}}\right|}}\right) \\
-& -\frac{1}{2} d_{i}^{(T)^{T}}\left(C_{i}^{B}+T C_{i}^{A} T^{T}\right)^{-1} d_{i}^{(T)} \\
-& =\underset{\mathbf{T}}{\arg \max } \sum_{\mathrm{i}}-\frac{1}{2} d_{i}^{(T){ }^{\mathrm{T}}}\left(C_{i}^{B}+T C_{i}^{A} T^{T}\right)^{-1} d_{i}^{(T)} \\
-& =\underset{\mathbf{T}}{\arg \min } \sum_{\mathrm{i}} \mathrm{d}_{\mathrm{i}}^{(\mathrm{T})^{\mathrm{T}}}\left(\mathrm{C}_{\mathrm{i}}^{\mathrm{B}}+\mathbf{T} \mathbf{C}_{\mathbf{i}}^{\mathrm{A}} \mathbf{T}^{\mathbf{T}}\right)^{-1} \mathrm{~d}_{\mathrm{i}}^{(\mathrm{T})}
-\end{aligned}
+\begin{equation}\begin{aligned}\text{T}&=\mathop{\arg\max}\limits_{\mathbf{T}}\prod_{\mathrm{i}}\text{p}(\mathrm{d}_{\mathrm{i}}^{(\mathbf{T})})  \\&=\mathop{\arg\max}\limits_{\mathbf{T}}\sum_{\mathrm{i}}\log(\mathrm{p(d_i^{(T)})}) \\&=\mathop{\arg\max}\limits_{\mathbf{T}}\sum_{\mathrm{i}}{ \log ( \frac 1 { \sqrt { ( 2 \pi ) ^ \mathrm{k}|\mathrm{C}_i^\mathrm{B}+\mathbf{T}\mathrm{C}_{i}^\mathrm{A}\mathbf{T}^\mathrm{T}|}})} \\&-\frac12(\mathrm{d_i^{(T)}-(\hat{b_i}-T\hat{a_i})})^{\mathrm{T}}(\mathrm{C_i^B+TC_i^AT^T})^{-1}(\mathrm{d_i^{(T)}-(\hat{b_i}-T\hat{a_i})}) \\&={\mathop{\arg\max}\limits_{\mathbf{T}}}\sum_\text{i}{ \log ( \frac 1 { \sqrt { ( 2 \pi ) ^ \mathrm{k}|\mathrm{C}_{i}^\mathrm{B}+\mathbf{T}\mathrm{C}_{i}^\mathrm{A}\mathbf{T}^\mathrm{T}|}})} \\&-\frac12{d_i^{(T)^T}(C_i^B+TC_i^AT^T)^{-1}d_i^{(T)}} \\&={\mathop{\arg\max}\limits_{\mathbf{T}}}\sum_\text{i}{ - \frac 1 2 }{d_i^{(T)}}^{\mathrm{T}}({C_i^B}+{TC_i^A}{T^T})^{-1}{d_i^{(T)}} \\&=\mathop{\arg\min}\limits_{\mathbf{T}}\sum_\text{i}{ \mathrm{d_i^{(T)}}}^{\mathrm{T}}(\mathrm{C_i^B}+\mathbf{TC_i^A}\mathbf{T^T})^{-1}\mathrm{d_i^{(T)}}\end{aligned}\end{equation}
 $$
