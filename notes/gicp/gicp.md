@@ -56,6 +56,5 @@ $$
 \begin{equation}\begin{aligned}
 \text{T}
 &=\mathop{\arg\max}\limits_{\mathbf{T}}\prod_{\mathrm{i}}\text{p}(\mathrm{d}_{\mathrm{i}}^{(\mathbf{T})})  \\
-&=\arg\max_{\mathrm{T}}\sum_{\mathrm{i}}\log(\mathrm{p(d_i^{(T)})}) \\
 \end{aligned}\end{equation}
 $$
