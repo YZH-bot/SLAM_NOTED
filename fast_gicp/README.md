@@ -17,6 +17,12 @@
 ![proctime](doc/fast_gicp_linearize_func.png)
 
 
+- run
+```bash
+# Perform frame-by-frame registration
+rosrun fast_gicp gicp_kitti /media/robot-nuc12/YZH2/SLAM_Dataset/KITTI_Semantic/data_odometry_velodyne/dataset/sequences/05/velodyne
+```
+
 ## Official Pages
 
 This package is a collection of GICP-based fast point cloud registration algorithms. It constains a multi-threaded GICP as well as multi-thread and GPU implementations of our voxelized GICP (VGICP) algorithm. All the implemented algorithms have the PCL registration interface so that they can be used as an inplace replacement for GICP in PCL.

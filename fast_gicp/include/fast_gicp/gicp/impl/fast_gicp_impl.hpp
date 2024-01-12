@@ -253,6 +253,7 @@ bool FastGICP<PointSource, PointTarget, SearchMethodSource, SearchMethodTarget>:
   if (kdtree.getInputCloud() != cloud) {
     kdtree.setInputCloud(cloud);
   }
+  // info: 每个点都会计算其协方差矩阵
   covariances.resize(cloud->size());
 
 #pragma omp parallel for num_threads(num_threads_) schedule(guided, 8)
@@ -266,8 +267,11 @@ bool FastGICP<PointSource, PointTarget, SearchMethodSource, SearchMethodTarget>:
       neighbors.col(j) = cloud->at(k_indices[j]).getVector4fMap().template cast<double>();
     }
 
+    // info：每一列都减去均值
     neighbors.colwise() -= neighbors.rowwise().mean().eval();
+    // info: 得到协方差矩阵
     Eigen::Matrix4d cov = neighbors * neighbors.transpose() / k_correspondences_;
+    std::cout << "协方差before：\n" << cov << std::endl;
 
     if (regularization_method_ == RegularizationMethod::NONE) {
       covariances[i] = cov;
@@ -299,6 +303,7 @@ bool FastGICP<PointSource, PointTarget, SearchMethodSource, SearchMethodTarget>:
 
       covariances[i].setZero();
       covariances[i].template block<3, 3>(0, 0) = svd.matrixU() * values.asDiagonal() * svd.matrixV().transpose();
+      std::cout << "近似协方差after：\n" << covariances[i] << std::endl;
     }
   }
 
