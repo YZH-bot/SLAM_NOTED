@@ -9,22 +9,15 @@
 |     优化源点集与目标点集中对应点之间位置的偏差      |       优化源点集与目标点集中对应点平面的偏差        | 每个点都服从高斯分布，<br> 也就是说每对对应点不需要完美对应上，<br> 尽可能提高对应的概率即可 |
 
 ## GICP 原理：
-假定我们找到了一对匹配点 $\pmb{a}_i$ 和 $\pmb{b}_i$ 的最优匹配为 $\pmb{T^*}$，那么：
+假定我们找到了一对匹配点 $\pmb{a}_i$ 和 $\pmb{b}_i$ 的最优匹配为 $\pmb{T}$，那么：
 
 $$
 \begin{equation}
-    \hat{\pmb{b}}_i = \pmb{T^*}\hat{\pmb{a}}_i
+    \hat{\pmb{b}}_i = \pmb{T}\hat{\pmb{a}}_i
 \end{equation}
 $$
 
 定义它们之间的距离残差为 $d_i^{(\pmb{T})} = \hat{\pmb{b}}_i - \pmb{T^*}\hat{\pmb{a}}_i$，假设 $\pmb{a}_i$ 和 $\pmb{b}_i$ 独立，则：
-
-$$
-\begin{equation}\begin{split}
-d_{i}^{(\mathbf{T})}& \sim\mathcal{N}\left(\hat{b_i}-\left(\mathbf{T}\right)\hat{a_i},C_i^B+\left(\mathbf{T}^*\right)C_i^A\left(\mathbf{T}\right)^T\right)  \\
-&=\mathcal{N}\left(0,C_i^B+\left(\mathbf{T}\right)C_i^A\left(\mathbf{T}\right)^T\right)
-\end{split}\end{equation}
-$$
 
 $$
 \begin{equation}
@@ -36,11 +29,11 @@ $$
 \end{equation}
 $$
 
-GICP通过最大似然估计，找到置信最高的变换矩阵 $\pmb{T^*}$：
+GICP通过最大似然估计，找到置信最高的变换矩阵 $\pmb{T}$：
 
 $$
 \begin{equation}\begin{aligned}
-\mathbf{T}^{*}& =\operatorname*{argmax}_{\mathbf{T}}\prod_ip\left(d_i^{(\mathbf{T})}\right)  \\
+\mathbf{T}& =\operatorname*{argmax}_{\mathbf{T}}\prod_ip\left(d_i^{(\mathbf{T})}\right)  \\
 &=\underset{\mathbf{T}}{\operatorname*{\mathrm{argmax}}}\sum_i\log\left(p\left(d_i^{(\mathbf{T})}\right)\right) \\
 &=\underset{\mathbf{T}}{\operatorname*{\mathrm{argmin}}}\sum_i {d_i^{(\mathbf{T})}}^T\left(C_i^B+\mathbf{T}C_i^A\mathbf{T}^T\right)^{-1}d_i^{(\mathbf{T})}
 \end{aligned}\end{equation}
