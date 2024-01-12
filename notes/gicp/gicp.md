@@ -67,13 +67,15 @@ $$
 \end{equation}
 $$
 
-$$\begin{aligned}
-\text{T}& =\arg\max_\mathrm{T}\prod_\mathrm{i}\mathrm{p(d_i^{(T)})}  \\
-&=\arg\max_{\mathrm{T}}\sum_{\mathrm{i}}\log(\mathrm{p(d_i^{(T)})}) \\
-&=\arg\max_{\mathbf{T}}\sum_\text{i}{ \log ( \frac 1 { \sqrt { ( 2 \pi ) ^ \mathrm{k}|\mathrm{C}_i^\mathrm{B}+\mathbf{T}\mathrm{C}_i^\mathrm{A}\mathbf{T}^\mathrm{T}|}})} \\
-&-\mathrm{\frac12(d_i^{(T)}-(\hat{b_i}-T\hat{a_i}))^T(C_i^B+TC_i^AT^T)^{-1}(d_i^{(T)}-(\hat{b_i}-T\hat{a_i}))} \\
-&=\arg\max_{\mathbf{T}}\sum_\text{i}{ \log ( \frac 1 { \sqrt { ( 2 \pi ) ^ \mathrm{k}|\mathrm{C}_i^\mathrm{B}+\mathrm{T}\mathrm{C}_i^\mathrm{A}\mathrm{T}^\mathrm{T}|}})} \\
-&-\frac12d_i^{(T)^T}(C_i^B+TC_i^AT^T)^{-1}d_i^{(T)} \\
-&=\underset{\mathrm{T}}{\operatorname*{\arg\max}}\sum_\text{i}{ - \frac 1 2 }d_i^{(T)\operatorname{T}}(C_i^B+TC_i^AT^T)^{-1}d_i^{(T)} \\
-&=\underset{\mathbf{T}}{\operatorname*{\arg\min}}\sum_{\mathrm{i}}{\mathrm{d_i^{(T)^T}(C_i^B+TC_i^AT^T)^{-1}d_i^{(T)}}}
-\end{aligned}$$
+$$
+\begin{aligned}
+\mathrm{T} & =\underset{\mathbf{T}}{\arg \max } \prod_{\mathrm{i}} \mathrm{p}\left(\mathrm{d}_{\mathrm{i}}^{(\mathbf{T})}\right) \\
+& =\underset{\mathbf{T}}{\arg \max } \sum_{\mathrm{i}} \log \left(\mathrm{p}\left(\mathrm{d}_{\mathrm{i}}^{(\mathrm{T})}\right)\right) \\
+& =\underset{\mathbf{T}}{\arg \max } \sum_{\mathrm{i}} \log \left(\frac{1}{\sqrt{(2 \pi)^{\mathrm{k}}\left|\mathrm{C}_{i}^{\mathrm{B}}+\mathbf{T C}_{i}^{\mathrm{A}} \mathbf{T}^{\mathrm{T}}\right|}}\right) \\
+& -\frac{1}{2}\left(\mathrm{~d}_{\mathrm{i}}^{(\mathrm{T})}-\left(\hat{\mathrm{b}}_{\mathrm{i}}-\mathrm{Ta}_{\mathrm{i}}\right)^{\mathrm{T}}\left(\mathrm{C}_{\mathrm{i}}^{\mathrm{B}}+\mathrm{TC}_{\mathrm{i}}^{\mathrm{A}} \mathrm{T}^{\mathrm{T}}\right)^{-1}\left(\mathrm{~d}_{\mathrm{i}}^{(\mathrm{T})}-\left(\hat{\mathrm{b}}_{\mathrm{i}}-\mathrm{T} \hat{\mathrm{a}}_{\mathrm{i}}\right)\right)\right. \\
+& =\underset{\mathbf{T}}{\arg \max } \sum_{\mathrm{i}} \log \left(\frac{1}{\sqrt{(2 \pi)^{\mathrm{k}}\left|\mathrm{C}_{i}^{\mathrm{B}}+\mathbf{T} \mathbf{T}_{i}^{\mathrm{A}} \mathbf{T}^{\mathrm{T}}\right|}}\right) \\
+& -\frac{1}{2} d_{i}^{(T)^{T}}\left(C_{i}^{B}+T C_{i}^{A} T^{T}\right)^{-1} d_{i}^{(T)} \\
+& =\underset{\mathbf{T}}{\arg \max } \sum_{\mathrm{i}}-\frac{1}{2} d_{i}^{(T){ }^{\mathrm{T}}}\left(C_{i}^{B}+T C_{i}^{A} T^{T}\right)^{-1} d_{i}^{(T)} \\
+& =\underset{\mathbf{T}}{\arg \min } \sum_{\mathrm{i}} \mathrm{d}_{\mathrm{i}}^{(\mathrm{T})^{\mathrm{T}}}\left(\mathrm{C}_{\mathrm{i}}^{\mathrm{B}}+\mathbf{T} \mathbf{C}_{\mathbf{i}}^{\mathrm{A}} \mathbf{T}^{\mathbf{T}}\right)^{-1} \mathrm{~d}_{\mathrm{i}}^{(\mathrm{T})}
+\end{aligned}
+$$
