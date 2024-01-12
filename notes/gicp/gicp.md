@@ -53,15 +53,6 @@ $$
 公式(3)目标函数的推导:
 
 $$
-\begin{equation}\begin{aligned}
-\mathbf{T}& =\mathop{\arg\max}\limits_{\mathbf{T}}\prod_ip\left(d_i^{(\mathbf{T})}\right)  \\
-&={\mathop{\arg\max}\limits_{\mathbf{T}}}\sum_i\log\left(p\left(d_i^{(\mathbf{T})}\right)\right) \\
-&=\mathop{\arg\max}\limits_{\mathbf{T}}\sum_i{ \log ( \frac{ 1 }{ \sqrt {(2\pi)^ k\mathrm{C}_\mathrm{i}^\mathrm{B}+\mathbf{T}\mathrm{C}_i^\mathrm{A}\mathbf{T}^\mathrm{T}}})} \\
-&=\mathop{\arg\max}\limits_{\mathbf{T}}\sum_i {d_i^{(\mathbf{T})}}^T\left(C_i^B+\mathbf{T}C_i^A\mathbf{T}^T\right)^{-1}d_i^{(\mathbf{T})}\\
-\end{aligned}\end{equation}
-$$
-
-$$
 \begin{equation}
 \begin{aligned}
 \text{T}&=\mathop{\arg\max}\limits_{\mathbf{T}}\prod_{\mathrm{i}}\text{p}(\mathrm{d}_{\mathrm{i}}^{(\mathbf{T})})  \\
@@ -75,3 +66,14 @@ $$
 \end{aligned}
 \end{equation}
 $$
+
+$$\begin{aligned}
+\text{T}& =\arg\max_\mathrm{T}\prod_\mathrm{i}\mathrm{p(d_i^{(T)})}  \\
+&=\arg\max_{\mathrm{T}}\sum_{\mathrm{i}}\log(\mathrm{p(d_i^{(T)})}) \\
+&=\arg\max_{\mathbf{T}}\sum_\text{i}{ \log ( \frac 1 { \sqrt { ( 2 \pi ) ^ \mathrm{k}|\mathrm{C}_i^\mathrm{B}+\mathbf{T}\mathrm{C}_i^\mathrm{A}\mathbf{T}^\mathrm{T}|}})} \\
+&-\mathrm{\frac12(d_i^{(T)}-(\hat{b_i}-T\hat{a_i}))^T(C_i^B+TC_i^AT^T)^{-1}(d_i^{(T)}-(\hat{b_i}-T\hat{a_i}))} \\
+&=\arg\max_{\mathbf{T}}\sum_\text{i}{ \log ( \frac 1 { \sqrt { ( 2 \pi ) ^ \mathrm{k}|\mathrm{C}_i^\mathrm{B}+\mathrm{T}\mathrm{C}_i^\mathrm{A}\mathrm{T}^\mathrm{T}|}})} \\
+&-\frac12d_i^{(T)^T}(C_i^B+TC_i^AT^T)^{-1}d_i^{(T)} \\
+&=\underset{\mathrm{T}}{\operatorname*{\arg\max}}\sum_\text{i}{ - \frac 1 2 }d_i^{(T)\operatorname{T}}(C_i^B+TC_i^AT^T)^{-1}d_i^{(T)} \\
+&=\underset{\mathbf{T}}{\operatorname*{\arg\min}}\sum_{\mathrm{i}}{\mathrm{d_i^{(T)^T}(C_i^B+TC_i^AT^T)^{-1}d_i^{(T)}}}
+\end{aligned}$$
