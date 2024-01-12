@@ -20,10 +20,10 @@ $$
 定义它们之间的距离残差为 $d_i^{(\pmb{T})} = \hat{\pmb{b}}_i - \pmb{T^*}\hat{\pmb{a}}_i$，假设 $\pmb{a}_i$ 和 $\pmb{b}_i$ 独立，则：
 
 $$
-\begin{split}
+\begin{equation}\begin{split}
 d_{i}^{(\mathbf{T}^{*})}& \sim\mathcal{N}\left(\hat{b_i}-\left(\mathbf{T}^*\right)\hat{a_i},C_i^B+\left(\mathbf{T}^*\right)C_i^A\left(\mathbf{T}^*\right)^T\right)  \\
 &=\mathcal{N}\left(0,C_i^B+\left(\mathbf{T}^*\right)C_i^A\left(\mathbf{T}^*\right)^T\right)
-\end{split}
+\end{split}\end{equation}
 $$
 
 GICP通过最大似然估计，找到置信最高的变换矩阵 $\pmb{T^*}$：
