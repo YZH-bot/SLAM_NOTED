@@ -34,6 +34,17 @@ d_{i}^{({T}^{*})}& \sim{N}(\hat{b_i}-({T}^*)\hat{a_i},C_i^B+({T}^*)C_i^A({T}^*)^
 \end{equation}
 $$
 
+$$
+\begin{equation}
+\begin{split}
+\frac{\partial^2 f}{\partial{x^2}} &= \frac{\partial(\Delta_x f(i,j))}{\partial x} = \frac{\partial(f(i+1,j)-f(i,j))}{\partial x} \\
+&= \frac{\partial f(i+1,j)}{\partial x} - \frac{\partial f(i,j)}{\partial x} \\
+&= f(i+2,j) -2f(f+1,j) + f(i,j)
+\end{split}
+\nonumber
+\end{equation}
+$$
+
 GICP通过最大似然估计，找到置信最高的变换矩阵 $\pmb{T^*}$：
 
 $$
