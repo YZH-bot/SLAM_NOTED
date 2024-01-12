@@ -57,7 +57,7 @@ $$
 \mathbf{T}& =\mathop{\arg\max}\limits_{\mathbf{T}}\prod_ip\left(d_i^{(\mathbf{T})}\right)  \\
 &={\mathop{\arg\max}\limits_{\mathbf{T}}}\sum_i\log\left(p\left(d_i^{(\mathbf{T})}\right)\right) \\
 &=\mathop{\arg\max}\limits_{\mathbf{T}}\sum_i {d_i^{(\mathbf{T})}}^T\left(C_i^B+\mathbf{T}C_i^A\mathbf{T}^T\right)^{-1}d_i^{(\mathbf{T})}\\
-&=\mathop{\arg\max}\limits_{\mathbf{T}}\sum_{\mathrm{i}}{ \log ( \frac 1 { \sqrt { ( 2 \pi ) ^ \mathrm{k}|\mathrm{C}_\mathrm{i}^\mathrm{B}+\mathbf{T}\mathrm{C}_\mathrm{i}^\mathrm{A}\mathbf{T}^\mathrm{T}|}})} \\
+&=\mathop{\arg\max}\limits_{\mathbf{T}}\sum_i{ \log ( \frac 1 { \sqrt { ( 2 \pi ) ^ \mathrm{k}|\mathrm{C}_\mathrm{i}^\mathrm{B}+\mathbf{T}\mathrm{C}_\mathrm{i}^\mathrm{A}\mathbf{T}^\mathrm{T}|}})} \\
 \end{aligned}\end{equation}
 $$
 
