@@ -29,11 +29,9 @@ $$
 $$
 \begin{equation}
 \begin{split}
-\frac{\partial^2 f}{\partial{x^2}} &= \frac{\partial(\Delta_x f(i,j))}{\partial x} = \frac{\partial(f(i+1,j)-f(i,j))}{\partial x} \\\\
-&= \frac{\partial f(i+1,j)}{\partial x} - \frac{\partial f(i,j)}{\partial x} \\\\
-&= f(i+2,j) -2f(f+1,j) + f(i,j)
+d_{i}^{(\mathbf{T}^{*})}& \sim\mathcal{N}\left(\hat{b_i}-\left(\mathbf{T}^*\right)\hat{a_i},C_i^B+\left(\mathbf{T}^*\right)C_i^A\left(\mathbf{T}^*\right)^T\right)  \\
+&=\mathcal{N}\left(0,C_i^B+\left(\mathbf{T}^*\right)C_i^A\left(\mathbf{T}^*\right)^T\right)
 \end{split}
-\nonumber
 \end{equation}
 $$
 
