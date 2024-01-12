@@ -32,7 +32,7 @@ $$
 \frac{\partial^2 f}{\partial{x^2}} &= \frac{\partial(\Delta_x f(i,j))}{\partial x} = \frac{\partial(f(i+1,j)-f(i,j))}{\partial x} \\
 &= \frac{\partial f(i+1,j)}{\partial x} - \frac{\partial f(i,j)}{\partial x} \\
 &= f(i+2,j) -2f(f+1,j) + f(i,j)\\
-&= \mathcal{N}(0,C_i^B+(\mathbf{T}^*)C_i^A(\mathbf{T}^*)^T)\\
+&= {N}(0,C_i^B+({T}^*)C_i^A({T}^*)^T)\\
 \end{split}
 \end{equation}
 $$
