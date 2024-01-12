@@ -57,11 +57,5 @@ $$
 \text{T}
 &=\mathop{\arg\max}\limits_{\mathbf{T}}\prod_{\mathrm{i}}\text{p}(\mathrm{d}_{\mathrm{i}}^{(\mathbf{T})})  \\
 &=\arg\max_{\mathrm{T}}\sum_{\mathrm{i}}\log(\mathrm{p(d_i^{(T)})}) \\
-&=\arg\max_{\mathrm{T}}\sum_\text{i}{ \log ( \frac 1 { \sqrt { ( 2 \pi ) ^ \mathrm{k}|\mathrm{C}_\mathrm{i}^\mathrm{B}+\mathbf{T}\mathrm{C}_\mathrm{i}^\mathrm{A}\mathbf{T}^\mathrm{T}|}})} \\
-&-\frac12(\mathrm{d_i^{(T)}-(\hat{b_i}-T\hat{a_i})})^{\mathrm{T}}(\mathrm{C_i^B+TC_i^AT^T})^{-1}(\mathrm{d_i^{(T)}-(\hat{b_i}-T\hat{a_i})}) \\
-&={\mathop{\arg\max}\limits_{\mathbf{T}}}\sum_\text{i}{ \log ( \frac 1 { \sqrt { ( 2 \pi ) ^ \mathrm{k}|\mathrm{C}_\mathrm{i}^\mathrm{B}+\mathbf{T}\mathrm{C}_\mathrm{i}^\mathrm{A}\mathbf{T}^\mathrm{T}|}})} \\
-&-\frac12{d_i^{(T)^T}(C_i^B+TC_i^AT^T)^{-1}d_i^{(T)}} \\
-&={\mathop{\arg\max}\limits_{\mathbf{T}}}\sum_\text{i}{ - \frac 1 2 }{d_i^{(T)}}^{\mathrm{T}}({C_i^B}+{TC_i^A}{T^T})^{-1}{d_i^{(T)}} \\
-&=\mathop{\arg\min}\limits_{\mathbf{T}}\sum_\text{i}{ \mathrm{d_i^{(T)}}}^{\mathrm{T}}(\mathrm{C_i^B}+\mathbf{TC_i^A}\mathbf{T^T})^{-1}\mathrm{d_i^{(T)}}
 \end{aligned}\end{equation}
 $$
