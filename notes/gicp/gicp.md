@@ -55,14 +55,37 @@ $$
 $$
 \begin{equation}
 \begin{aligned}
-\text{T}&=\mathop{\arg\max}\limits_{\mathbf{T}}\prod_{\mathrm{i}}\text{p}(\mathrm{d}_{\mathrm{i}}^{(\mathbf{T})})  \\
-&=\mathop{\arg\max}\limits_{\mathbf{T}}\sum_{\mathrm{i}}\log(\mathrm{p(d_i^{(T)})}) \\
+\text{T}&=\mathop{\arg\max}\limits_{\mathbf{T}}\prod_{\mathrm{i}}\text{p}({d}_{\mathrm{i}}^{(\mathbf{T})})  \\
+&=\mathop{\arg\max}\limits_{\mathbf{T}}\sum_{\mathrm{i}}\log({p(d_i^\mathbf{(T)})}) \\
 &=\mathop{\arg\max}\limits_{\mathbf{T}}\sum_{\mathrm{i}}{ \log ( \frac 1 { \sqrt { ( 2 \pi ) ^ \mathrm{k}|\mathrm{C}_i^\mathrm{B}+\mathbf{T}\mathrm{C}_{i}^\mathrm{A}\mathbf{T}^\mathrm{T}|}})} \\
-&-\frac12(\mathrm{d_i^{(T)}-(\hat{b_i}-T\hat{a_i})})^{\mathrm{T}}(\mathrm{C_i^B+TC_i^AT^T})^{-1}(\mathrm{d_i^{(T)}-(\hat{b_i}-T\hat{a_i})}) \\
+&-\frac12({d_i^\mathbf{(T)}-(\hat{b_i}-\mathbf{T}\hat{a_i})})^{{T}}({\mathrm{C_i^B}+\mathbf{T}\mathrm{C_i^A}\mathbf{T}^T})^{-1}({d_i^{(T)}-(\hat{b_i}-\mathbf{T}\hat{a_i})}) \\
 &={\mathop{\arg\max}\limits_{\mathbf{T}}}\sum_\text{i}{ \log ( \frac 1 { \sqrt { ( 2 \pi ) ^ \mathrm{k}|\mathrm{C}_{i}^\mathrm{B}+\mathbf{T}\mathrm{C}_{i}^\mathrm{A}\mathbf{T}^\mathrm{T}|}})} \\
-&-\frac12{d_i^{(T)^T}(C_i^B+TC_i^AT^T)^{-1}d_i^{(T)}} \\
-&={\mathop{\arg\max}\limits_{\mathbf{T}}}\sum_\text{i}{ - \frac 1 2 }{d_i^{(T)}}^{\mathrm{T}}({C_i^B}+{TC_i^A}{T^T})^{-1}{d_i^{(T)}} \\
-&=\mathop{\arg\min}\limits_{\mathbf{T}}\sum_\text{i}{ \mathrm{d_i^{(T)}}}^{\mathrm{T}}(\mathrm{C_i^B}+\mathbf{TC_i^A}\mathbf{T^T})^{-1}\mathrm{d_i^{(T)}}
+&-\frac12{d_i^{(\mathbf{T})^T}({\mathrm{C_i^B}+\mathbf{T}\mathrm{C_i^A}\mathbf{T}^T})^{-1}d_i^{(\mathbf{T})}} \\
+&={\mathop{\arg\max}\limits_{\mathbf{T}}}\sum_\text{i}{ - \frac 1 2 }{d_i^{(\mathbf{T})}}^{{T}}({\mathrm{C_i^B}+\mathbf{T}\mathrm{C_i^A}\mathbf{T}^T})^{-1}{d_i^{(\mathbf{T})}} \\
+&=\mathop{\arg\min}\limits_{\mathbf{T}}\sum_\text{i}{ {d_i^{(\mathbf{T})}}}^{\mathrm{T}}(\mathrm{C_i^B}+\mathbf{T}\mathrm{C_i^A}\mathbf{T}^T)^{-1}{d_i^{(\mathbf{T})}}
 \end{aligned}
 \end{equation}
 $$
+
+## 优化推导
+- 为了方便求导和加速运算，作者代码中将协方差权重部分 $(\mathrm{C_i^B}+\mathbf{T}\mathrm{C_i^A}\mathbf{T}^T)^{-1}$ 当作一个常数矩阵。 
+<br>
+
+- 求导部分使用的是左扰动形式，并且是用的是 $SE(3)$ 进行推导：
+
+$$
+\begin{equation}\begin{aligned}
+\frac{\partial\left(\mathbf{Tp}\right)}{\partial\delta\boldsymbol{\xi}}& =\lim_{\delta\boldsymbol{\xi}\to\boldsymbol{0}}\frac{\exp\left(\delta\boldsymbol{\xi}^{\wedge}\right)\exp\left(\boldsymbol{\xi}^{\wedge}\right)\mathbf{p}-\exp\left(\boldsymbol{\xi}^{\wedge}\right)\mathbf{p}}{\delta\boldsymbol{\xi}}  \\
+&=\lim_{\delta\boldsymbol{\xi}\to\boldsymbol{0}}\frac{\left(\mathbf{I}+\delta\boldsymbol{\xi}^{\wedge}\right)\exp\left(\boldsymbol{\xi}^{\wedge}\right)\mathbf{p}-\exp\left(\boldsymbol{\xi}^{\wedge}\right)\mathbf{p}}{\delta\boldsymbol{\xi}} \\
+&=\lim_{\delta\boldsymbol{\xi}\to\boldsymbol{0}}\frac{\delta\boldsymbol{\xi}^{\wedge}\exp\left(\boldsymbol{\xi}^{\wedge}\right)\mathbf{p}}{\delta\boldsymbol{\xi}} \\
+&=\lim_{\delta\boldsymbol{\xi}\to\boldsymbol{0}}\frac{\left[\begin{array}{cc}\delta\boldsymbol{\phi}^{\wedge}&\delta\boldsymbol{\rho}\\\mathbf{0}^{T}&0\end{array}\right]\left[\begin{array}{c}\mathbf{R}\mathbf{p}+\mathbf{t}\\1\end{array}\right]}{\delta\boldsymbol{\xi}} \\
+&=\lim_{\delta\boldsymbol{\xi}\to\boldsymbol{0}}\frac{\left[\begin{array}{c}\delta\boldsymbol{\phi}^{\wedge}\left(\mathbf{R}\mathbf{p}+\mathbf{t}\right)+\delta\boldsymbol{\rho}\\\mathbf{0}^{T}\end{array}\right. ]}{[\delta\boldsymbol{\rho},\delta\boldsymbol{\phi}]^{T}}=\left[\begin{array}{cc}\mathbf{I}&-(\mathbf{R}\mathbf{p}+\mathbf{t})^{\wedge}\\\mathbf{0}^{T}&\mathbf{0}^{T}\end{array}\right]\triangleq(\mathbf{T}\mathbf{p})^{\odot}
+\end{aligned}\end{equation}
+$$
+
+### Gaussian-Newton 优化
+- **代码实现 FastGICP::linearize 函数**：通过多线程对H矩阵和b矩阵进行计算   此外，这是个虚函数，每个子类需要自己进行实现
+![proctime](../../fast_gicp/doc/fast_gicp_linearize_func.png)
+## REFERENCE
+[[1] https://blog.csdn.net/keineahnung2345/article/details/122836492](https://blog.csdn.net/keineahnung2345/article/details/122836492)
+[[2] https://blog.csdn.net/xinxiangwangzhi_/article/details/125236953](https://blog.csdn.net/xinxiangwangzhi_/article/details/125236953)

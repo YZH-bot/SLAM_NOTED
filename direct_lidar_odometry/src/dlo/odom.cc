@@ -668,7 +668,7 @@ void dlo::OdomNode::icpCB(const sensor_msgs::PointCloud2ConstPtr& pc) {
   this->preprocessPoints();
 
   // Compute Metrics
-  // 开辟一个线程计算自适应参数
+  // doc：开辟一个线程计算自适应参数
   this->metrics_thread = std::thread( &dlo::OdomNode::computeMetrics, this );
   this->metrics_thread.detach();
 
@@ -845,7 +845,7 @@ void dlo::OdomNode::getNextPose() {
   this->gicp.source_covs_ = this->gicp_s2s.source_covs_;
 
   // Swap source and target (which also swaps KdTrees internally) for next S2S
-  // info：gicp_s2s的target只在初始化的时候显示设置了，后面都是通过swap更新target
+  // info：gicp_s2s的target只在初始化的时候显示设置了，后面都是通过swap更新target，节省时间
   this->gicp_s2s.swapSourceAndTarget();
 
   //
@@ -853,6 +853,7 @@ void dlo::OdomNode::getNextPose() {
   //
 
   // Get current global submap
+  // info：获取全局坐标下的 submap
   this->getSubmapKeyframes();
 
   if (this->submap_hasChanged) {
@@ -1055,8 +1056,10 @@ void dlo::OdomNode::computeConvexHull() {
   }
 
   // create a pointcloud with points at keyframes
+  // INFO: 把每个关键帧的 position 转化为pcl的点云，方便调用pcl的convexhull
   pcl::PointCloud<PointType>::Ptr cloud = pcl::PointCloud<PointType>::Ptr (new pcl::PointCloud<PointType>);
 
+  // info: cloud存储的是 position 坐标
   for (const auto& k : this->keyframes) {
     PointType pt;
     pt.x = k.first.first[0];
@@ -1066,6 +1069,7 @@ void dlo::OdomNode::computeConvexHull() {
   }
 
   // calculate the convex hull of the point cloud
+  // info: pcl::ConvexHull<PointType>
   this->convex_hull.setInputCloud(cloud);
 
   // get the indices of the keyframes on the convex hull
@@ -1075,6 +1079,7 @@ void dlo::OdomNode::computeConvexHull() {
   pcl::PointIndices::Ptr convex_hull_point_idx = pcl::PointIndices::Ptr (new pcl::PointIndices);
   this->convex_hull.getHullPointIndices(*convex_hull_point_idx);
 
+  // info:   std::vector<int> keyframe_convex;
   this->keyframe_convex.clear();
   for (int i=0; i<convex_hull_point_idx->indices.size(); ++i) {
     this->keyframe_convex.push_back(convex_hull_point_idx->indices[i]);
@@ -1239,6 +1244,8 @@ void dlo::OdomNode::setAdaptiveParams() {
 
 /**
  * Push Submap Keyframe Indices
+ * @details 存储k个近邻关键帧的索引
+ * @param k：k近邻个数
  **/
 void dlo::OdomNode::pushSubmapIndices(std::vector<float> dists, int k, std::vector<int> frames) {
 
@@ -1246,8 +1253,10 @@ void dlo::OdomNode::pushSubmapIndices(std::vector<float> dists, int k, std::vect
   if (!dists.size()) { return; }
 
   // maintain max heap of at most k elements
+  // doc：stl容器，默认是大顶堆
   std::priority_queue<float> pq;
 
+  // doc：只存储k个最小距离
   for (auto d : dists) {
     if (pq.size() >= k && pq.top() > d) {
       pq.push(d);
@@ -1261,6 +1270,7 @@ void dlo::OdomNode::pushSubmapIndices(std::vector<float> dists, int k, std::vect
   float kth_element = pq.top();
 
   // get all elements smaller or equal to the kth smallest element
+  // info：把距离小于第k个最小距离的关键帧的索引存储到 submap_kf_idx_curr 中
   for (int i = 0; i < dists.size(); ++i) {
     if (dists[i] <= kth_element)
       this->submap_kf_idx_curr.push_back(frames[i]);
@@ -1276,6 +1286,7 @@ void dlo::OdomNode::pushSubmapIndices(std::vector<float> dists, int k, std::vect
 void dlo::OdomNode::getSubmapKeyframes() {
 
   // clear vector of keyframe indices to use for submap
+  // info：存储k个近邻关键帧的索引
   this->submap_kf_idx_curr.clear();
 
   //
@@ -1285,8 +1296,10 @@ void dlo::OdomNode::getSubmapKeyframes() {
   // calculate distance between current pose and poses in keyframe set
   std::vector<float> ds;
   std::vector<int> keyframe_nn; int i=0;
+  // info: 现在的 T_s2s 代表的是 s2s 计算的全局位姿
   Eigen::Vector3f curr_pose = this->T_s2s.block(0,3,3,1);
 
+  // doc：定义 std::vector<std::pair<std::pair<Eigen::Vector3f, Eigen::Quaternionf>, pcl::PointCloud<PointType>::Ptr>> keyframes;
   for (const auto& k : this->keyframes) {
     float d = sqrt( pow(curr_pose[0] - k.first.first[0], 2) + pow(curr_pose[1] - k.first.first[1], 2) + pow(curr_pose[2] - k.first.first[2], 2) );
     ds.push_back(d);
@@ -1294,6 +1307,7 @@ void dlo::OdomNode::getSubmapKeyframes() {
   }
 
   // get indices for top K nearest neighbor keyframe poses
+  // info：更新k个近邻关键帧的索引 submap_kf_idx_curr
   this->pushSubmapIndices(ds, this->submap_knn_, keyframe_nn);
 
   //
