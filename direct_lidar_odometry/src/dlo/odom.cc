@@ -856,6 +856,7 @@ void dlo::OdomNode::getNextPose() {
   // info：获取全局坐标下的 submap
   this->getSubmapKeyframes();
 
+  // info：submap 发生了变化，需要改变 Target目标点云 和 Covariances协方差
   if (this->submap_hasChanged) {
 
     // Set the current global submap as the target cloud
@@ -866,20 +867,26 @@ void dlo::OdomNode::getNextPose() {
   }
 
   // Align with current submap with global S2S transformation as initial guess
+  // info：进行 scan-to-submap 配准
   this->gicp.align(*aligned, this->T_s2s);
 
   // Get final transformation in global frame
+  // info：获取最终的定位结果
   this->T = this->gicp.getFinalTransformation();
 
   // Update the S2S transform for next propagation
+  // doc：更新 scan-to-scan 存储的全局位姿，用于递推
   this->T_s2s_prev = this->T;
 
   // Update next global pose
   // Both source and target clouds are in the global frame now, so tranformation is global
+  // doc：更新全局位姿
+  // ???: 怎么有那么多个全局位姿变量，需要理清楚
   this->propagateS2M();
 
   // Set next target cloud as current source cloud
-  // info：这里*this->target_cloud的作用还不清楚，貌似没有其他地方用到？？？
+  // info：这里*this->target_cloud的作用还不清楚，貌似没有其他地方用到？？？ 
+  // ??? ：按理前面的swap已经交换了
   *this->target_cloud = *this->source_cloud;
 
 }
@@ -1079,7 +1086,7 @@ void dlo::OdomNode::computeConvexHull() {
   pcl::PointIndices::Ptr convex_hull_point_idx = pcl::PointIndices::Ptr (new pcl::PointIndices);
   this->convex_hull.getHullPointIndices(*convex_hull_point_idx);
 
-  // info:   std::vector<int> keyframe_convex;
+  // info:   std::vector<int> keyframe_convex;    存储属于凸壳上的 position 的索引
   this->keyframe_convex.clear();
   for (int i=0; i<convex_hull_point_idx->indices.size(); ++i) {
     this->keyframe_convex.push_back(convex_hull_point_idx->indices[i]);
@@ -1315,15 +1322,18 @@ void dlo::OdomNode::getSubmapKeyframes() {
   //
 
   // get convex hull indices
+  // info：根据关键帧的 position 计算 convex hull
   this->computeConvexHull();
 
   // get distances for each keyframe on convex hull
+  // info：根据索引获取距离，用于 knn 
   std::vector<float> convex_ds;
   for (const auto& c : this->keyframe_convex) {
     convex_ds.push_back(ds[c]);
   }
 
   // get indicies for top kNN for convex hull
+  // info：获取convex hull 中 kNN 最近邻的关键帧
   this->pushSubmapIndices(convex_ds, this->submap_kcv_, this->keyframe_convex);
 
   //
@@ -1331,15 +1341,18 @@ void dlo::OdomNode::getSubmapKeyframes() {
   //
 
   // get concave hull indices
+  // doc：同上
   this->computeConcaveHull();
 
   // get distances for each keyframe on concave hull
+  // doc：同上
   std::vector<float> concave_ds;
   for (const auto& c : this->keyframe_concave) {
     concave_ds.push_back(ds[c]);
   }
 
   // get indicies for top kNN for convex hull
+  // doc：同上
   this->pushSubmapIndices(concave_ds, this->submap_kcc_, this->keyframe_concave);
 
   //
@@ -1347,24 +1360,33 @@ void dlo::OdomNode::getSubmapKeyframes() {
   //
 
   // concatenate all submap clouds and normals
+  // doc：该函数的作用是“去除”容器或者数组中相邻元素的重复出现的元素，注意 
+  // doc：(1) 这里的去除并非真正意义的erase，而是将重复的元素放到容器的末尾，返回值是去重之后的尾地址。 
+  // doc：(2) unique针对的是相邻元素，所以对于顺序顺序错乱的数组成员，或者容器成员，需要先进行排序，可以调用std::sort()函数
+  // info：对应论文中提到的，kNN最近邻中的关键帧也有可能在凸壳上，所以这里去重
   std::sort(this->submap_kf_idx_curr.begin(), this->submap_kf_idx_curr.end());
   auto last = std::unique(this->submap_kf_idx_curr.begin(), this->submap_kf_idx_curr.end());
-  this->submap_kf_idx_curr.erase(last, this->submap_kf_idx_curr.end());
+  this->submap_kf_idx_curr.erase(last, this->submap_kf_idx_curr.end()); // doc：释放内存
 
   // sort current and previous submap kf list of indices
   std::sort(this->submap_kf_idx_curr.begin(), this->submap_kf_idx_curr.end());
   std::sort(this->submap_kf_idx_prev.begin(), this->submap_kf_idx_prev.end());
 
   // check if submap has changed from previous iteration
+  // info：判断 submap 是否发生变化
   if (this->submap_kf_idx_curr == this->submap_kf_idx_prev){
     this->submap_hasChanged = false;
   } else {
+    // doc：更新标志位
     this->submap_hasChanged = true;
 
     // reinitialize submap cloud, normals
+    // info：检测到 submap 发生变化，进行刷新
     pcl::PointCloud<PointType>::Ptr submap_cloud_ (boost::make_shared<pcl::PointCloud<PointType>>());
+    // doc：清空 协方差矩阵 容器
     this->submap_normals.clear();
 
+    // info：更新点云和协方差
     for (auto k : this->submap_kf_idx_curr) {
 
       // create current submap cloud

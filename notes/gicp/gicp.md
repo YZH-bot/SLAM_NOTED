@@ -3,7 +3,7 @@
 [TOC]
 
 ## ICP 算法介绍 
-|                 point-to-point icp                  |                 point-to-plane icp                  |                                      point-to-plane icp                                      |
+|                 point-to-point icp                  |                 point-to-plane icp                  |                                      gicp                                      |
 | :-------------------------------------------------: | :-------------------------------------------------: | :------------------------------------------------------------------------------------------: |
 | <img src="./imgs/point2point_icp.png" height="200"> | <img src="./imgs/point2plane_icp.png" height="200"> |                           <img src="./imgs/gicp.png" height="200">                           |
 |     优化源点集与目标点集中对应点之间位置的偏差      |       优化源点集与目标点集中对应点平面的偏差        | 每个点都服从高斯分布，<br> 也就是说每对对应点不需要完美对应上，<br> 尽可能提高对应的概率即可 |
