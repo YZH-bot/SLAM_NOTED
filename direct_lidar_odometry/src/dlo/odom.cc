@@ -699,18 +699,22 @@ void dlo::OdomNode::icpCB(const sensor_msgs::PointCloud2ConstPtr& pc) {
   this->getNextPose();
 
   // Update current keyframe poses and map
+  // info：判断是否需要更新关键帧，需要的话即更新
   this->updateKeyframes();
 
   // Update trajectory
+  // doc：更新位姿轨迹
   this->trajectory.push_back( std::make_pair(this->pose, this->rotq) );
 
   // Update next time stamp
   this->prev_frame_stamp = this->curr_frame_stamp;
 
   // Update some statistics
+  // info：记录实时性
   this->comp_times.push_back(ros::Time::now().toSec() - then);
 
   // Publish stuff to ROS
+  // doc：发布可视化
   this->publish_thread = std::thread( &dlo::OdomNode::publishToROS, this );
   this->publish_thread.detach();
 
@@ -735,10 +739,12 @@ void dlo::OdomNode::imuCB(const sensor_msgs::Imu::ConstPtr& imu) {
   double ang_vel[3], lin_accel[3];
 
   // Get IMU samples
+  // doc: 角速度
   ang_vel[0] = imu->angular_velocity.x;
   ang_vel[1] = imu->angular_velocity.y;
   ang_vel[2] = imu->angular_velocity.z;
 
+  // doc：线加速度
   lin_accel[0] = imu->linear_acceleration.x;
   lin_accel[1] = imu->linear_acceleration.y;
   lin_accel[2] = imu->linear_acceleration.z;
@@ -748,6 +754,8 @@ void dlo::OdomNode::imuCB(const sensor_msgs::Imu::ConstPtr& imu) {
   }
 
   // IMU calibration procedure - do for three seconds
+  // doc：IMU矫正，this->imu_calib_time_ = 3s 静止初始化
+  // info：因此这里矫正的话必须静止，否则要使用imu的话必须关闭矫正
   if (!this->imu_calibrated) {
 
     static int num_samples = 0;
@@ -757,6 +765,7 @@ void dlo::OdomNode::imuCB(const sensor_msgs::Imu::ConstPtr& imu) {
 
       num_samples++;
 
+      // doc：累积3s内的imu数据
       this->imu_bias.gyro.x += ang_vel[0];
       this->imu_bias.gyro.y += ang_vel[1];
       this->imu_bias.gyro.z += ang_vel[2];
@@ -772,6 +781,7 @@ void dlo::OdomNode::imuCB(const sensor_msgs::Imu::ConstPtr& imu) {
 
     } else {
 
+      // doc：取平均
       this->imu_bias.gyro.x /= num_samples;
       this->imu_bias.gyro.y /= num_samples;
       this->imu_bias.gyro.z /= num_samples;
@@ -783,6 +793,7 @@ void dlo::OdomNode::imuCB(const sensor_msgs::Imu::ConstPtr& imu) {
       this->imu_calibrated = true;
 
       std::cout << "done" << std::endl;
+      // doc：估计出初始 bias
       std::cout << "  Gyro biases [xyz]: " << this->imu_bias.gyro.x << ", " << this->imu_bias.gyro.y << ", " << this->imu_bias.gyro.z << std::endl << std::endl;
 
     }
@@ -792,6 +803,7 @@ void dlo::OdomNode::imuCB(const sensor_msgs::Imu::ConstPtr& imu) {
     // Apply the calibrated bias to the new IMU measurements
     this->imu_meas.stamp = imu->header.stamp.toSec();
 
+    // doc：只用到了 w，所以只是去除了w的bias
     this->imu_meas.ang_vel.x = ang_vel[0] - this->imu_bias.gyro.x;
     this->imu_meas.ang_vel.y = ang_vel[1] - this->imu_bias.gyro.y;
     this->imu_meas.ang_vel.z = ang_vel[2] - this->imu_bias.gyro.z;
@@ -853,7 +865,7 @@ void dlo::OdomNode::getNextPose() {
   //
 
   // Get current global submap
-  // info：获取全局坐标下的 submap
+  // info：获取全局坐标下的 submap，这个函数会更新submap
   this->getSubmapKeyframes();
 
   // info：submap 发生了变化，需要改变 Target目标点云 和 Covariances协方差
@@ -894,11 +906,13 @@ void dlo::OdomNode::getNextPose() {
 
 /**
  * Integrate IMU
+ * info：imu积分
  **/
 
 void dlo::OdomNode::integrateIMU() {
 
   // Extract IMU data between the two frames
+  // doc：提取两帧之间的imu数据
   std::vector<ImuMeas> imu_frame;
 
   for (const auto& i : this->imu_buffer) {
@@ -906,6 +920,7 @@ void dlo::OdomNode::integrateIMU() {
     // IMU data between two frames is when:
     //   current frame's timestamp minus imu timestamp is positive
     //   previous frame's timestamp minus imu timestamp is negative
+    // doc：取出两帧之间的imu数据
     double curr_frame_imu_dt = this->curr_frame_stamp - i.stamp;
     double prev_frame_imu_dt = this->prev_frame_stamp - i.stamp;
 
@@ -918,6 +933,7 @@ void dlo::OdomNode::integrateIMU() {
   }
 
   // Sort measurements by time
+  // doc：根据时间从小到大排序
   std::sort(imu_frame.begin(), imu_frame.end(), this->comparatorImu);
 
   // Relative IMU integration of gyro and accelerometer
@@ -928,19 +944,23 @@ void dlo::OdomNode::integrateIMU() {
   Eigen::Quaternionf q = Eigen::Quaternionf::Identity();
 
   for (uint32_t i = 0; i < imu_frame.size(); ++i) {
-
+    
+    // doc：记录并跳过第一帧
     if (prev_imu_stamp == 0.) {
       prev_imu_stamp = imu_frame[i].stamp;
       continue;
     }
 
     // Calculate difference in imu measurement times IN SECONDS
+    // doc：时间差dt
     curr_imu_stamp = imu_frame[i].stamp;
     dt = curr_imu_stamp - prev_imu_stamp;
     prev_imu_stamp = curr_imu_stamp;
     
     // Relative gyro propagation quaternion dynamics
+    // doc：旋转积分
     Eigen::Quaternionf qq = q;
+    // info：q = 1/2q×q(wt) 四元数的计算公式
     q.w() -= 0.5*( qq.x()*imu_frame[i].ang_vel.x + qq.y()*imu_frame[i].ang_vel.y + qq.z()*imu_frame[i].ang_vel.z ) * dt;
     q.x() += 0.5*( qq.w()*imu_frame[i].ang_vel.x - qq.z()*imu_frame[i].ang_vel.y + qq.y()*imu_frame[i].ang_vel.z ) * dt;
     q.y() += 0.5*( qq.z()*imu_frame[i].ang_vel.x + qq.w()*imu_frame[i].ang_vel.y - qq.x()*imu_frame[i].ang_vel.z ) * dt;
@@ -949,6 +969,7 @@ void dlo::OdomNode::integrateIMU() {
   }
 
   // Normalize quaternion
+  // doc：四元数归一化
   double norm = sqrt(q.w()*q.w() + q.x()*q.x() + q.y()*q.y() + q.z()*q.z());
   q.w() /= norm; q.x() /= norm; q.y() /= norm; q.z() /= norm;
 
@@ -1142,9 +1163,11 @@ void dlo::OdomNode::computeConcaveHull() {
 void dlo::OdomNode::updateKeyframes() {
 
   // transform point cloud
+  // doc：把当前帧转换到世界坐标系
   this->transformCurrentScan();
 
   // calculate difference in pose and rotation to all poses in trajectory
+  // doc：计算变化量，判断是否要作为关键帧存储
   float closest_d = std::numeric_limits<float>::infinity();
   int closest_idx = 0;
   int keyframes_idx = 0;
@@ -1162,6 +1185,7 @@ void dlo::OdomNode::updateKeyframes() {
     }
 
     // store into variable
+    // doc：存储位移变化量最小的关键帧 距离和索引
     if (delta_d < closest_d) {
       closest_d = delta_d;
       closest_idx = keyframes_idx;
@@ -1172,21 +1196,26 @@ void dlo::OdomNode::updateKeyframes() {
   }
 
   // get closest pose and corresponding rotation
+  // doc：获取上面的得到的关键帧的位置和姿态
   Eigen::Vector3f closest_pose = this->keyframes[closest_idx].first.first;
   Eigen::Quaternionf closest_pose_r = this->keyframes[closest_idx].first.second;
 
   // calculate distance between current pose and closest pose from above
+  // doc：前面计算过了为什么还要再计算一次？？？
   float dd = sqrt( pow(this->pose[0] - closest_pose[0], 2) + pow(this->pose[1] - closest_pose[1], 2) + pow(this->pose[2] - closest_pose[2], 2) );
 
   // calculate difference in orientation
+  // doc：计算姿态的变化量
   Eigen::Quaternionf dq = this->rotq * (closest_pose_r.inverse());
 
+  // doc：计算旋转向量的角度大小
   float theta_rad = 2. * atan2(sqrt( pow(dq.x(), 2) + pow(dq.y(), 2) + pow(dq.z(), 2) ), dq.w());
   float theta_deg = theta_rad * (180.0/M_PI);
 
   // update keyframe
   bool newKeyframe = false;
 
+  // doc：判断是否为关键帧
   if (abs(dd) > this->keyframe_thresh_dist_ || abs(theta_deg) > this->keyframe_thresh_rot_) {
     newKeyframe = true;
   }
@@ -1202,22 +1231,27 @@ void dlo::OdomNode::updateKeyframes() {
     ++this->num_keyframes;
 
     // voxelization for submap
+    // doc：降采样
     if (this->vf_submap_use_) {
       this->vf_submap.setInputCloud(this->current_scan_t);
       this->vf_submap.filter(*this->current_scan_t);
     }
 
     // update keyframe vector
+    // info：插入关键帧vector
     this->keyframes.push_back(std::make_pair(std::make_pair(this->pose, this->rotq), this->current_scan_t));
 
     // compute kdtree and keyframe normals (use gicp_s2s input source as temporary storage because it will be overwritten by setInputSources())
+    // ???
     *this->keyframes_cloud += *this->current_scan_t;
     *this->keyframe_cloud = *this->current_scan_t;
 
+    // doc: 计算该关键帧的协方差
     this->gicp_s2s.setInputSource(this->keyframe_cloud);
     this->gicp_s2s.calculateSourceCovariances();
     this->keyframe_normals.push_back(this->gicp_s2s.getSourceCovariances());
 
+    // doc：发布当前关键帧
     this->publish_keyframe_thread = std::thread( &dlo::OdomNode::publishKeyframe, this );
     this->publish_keyframe_thread.detach();
 
