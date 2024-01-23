@@ -961,6 +961,9 @@ void dlo::OdomNode::integrateIMU() {
     // doc：旋转积分
     Eigen::Quaternionf qq = q;
     // info：q = 1/2q×q(wt) 四元数的计算公式
+    // info：本来更新量 q(wt) = [cos(theta/2), n*sin(theta/2)]
+    // info：由于 theta = w*t 比较小，所以 cos(theta/2) = 1，n*sin(theta/2) = n*theta/2 = 1/2wt
+    // info：最终 q(wt) = [1, 1/2wt]
     q.w() -= 0.5*( qq.x()*imu_frame[i].ang_vel.x + qq.y()*imu_frame[i].ang_vel.y + qq.z()*imu_frame[i].ang_vel.z ) * dt;
     q.x() += 0.5*( qq.w()*imu_frame[i].ang_vel.x - qq.z()*imu_frame[i].ang_vel.y + qq.y()*imu_frame[i].ang_vel.z ) * dt;
     q.y() += 0.5*( qq.z()*imu_frame[i].ang_vel.x + qq.w()*imu_frame[i].ang_vel.y - qq.x()*imu_frame[i].ang_vel.z ) * dt;
