@@ -9,6 +9,7 @@
 
 #include "dlo/odom.h"
 
+// doc：静态成员，用于终止程序
 std::atomic<bool> dlo::OdomNode::abort_(false);
 
 
@@ -120,7 +121,7 @@ dlo::OdomNode::OdomNode(ros::NodeHandle node_handle) : nh(node_handle) {
   this->gicp.setSearchMethodSource(temp, true);
   this->gicp.setSearchMethodTarget(temp, true);
 
-  this->crop.setNegative(true); // true 去除盒子内的点
+  this->crop.setNegative(true); // doc：true 去除盒子内的点
   this->crop.setMin(Eigen::Vector4f(-this->crop_size_, -this->crop_size_, -this->crop_size_, 1.0));
   this->crop.setMax(Eigen::Vector4f(this->crop_size_, this->crop_size_, this->crop_size_, 1.0));
 
@@ -182,6 +183,7 @@ dlo::OdomNode::~OdomNode() {}
 
 /**
  * Odom Node Parameters
+ * info：用于设置参数
  **/
 
 void dlo::OdomNode::getParams() {
@@ -267,6 +269,7 @@ void dlo::OdomNode::getParams() {
 
 /**
  * Start Odom Thread
+ * info：打印开始信息
  **/
 
 void dlo::OdomNode::start() {
@@ -280,6 +283,7 @@ void dlo::OdomNode::start() {
 
 /**
  * Stop Odom Thread
+ * info：确保没有detach的线程进行join
  **/
 
 void dlo::OdomNode::stop() {
@@ -311,6 +315,7 @@ void dlo::OdomNode::stop() {
 
 /**
  * Abort Timer Callback
+ * info：没有用到
  **/
 
 void dlo::OdomNode::abortTimerCB(const ros::TimerEvent& e) {
@@ -322,6 +327,7 @@ void dlo::OdomNode::abortTimerCB(const ros::TimerEvent& e) {
 
 /**
  * Publish to ROS
+ * info：发布ros消息的线程回调函数
  **/
 
 void dlo::OdomNode::publishToROS() {
@@ -343,6 +349,11 @@ void dlo::OdomNode::publishPose() {
   q_diff = q_last.conjugate()*this->rotq;
 
   // If q_diff has negative real part then there was a sign flip
+  // info：四元数的 w < 0 意味着绕旋转轴的角度永远小于180，具体有什么意义貌似这里不是很有必要，只是可视化而已
+  // info：在计算机图形学、机器人学和计算机视觉等领域，旋转通常用四元数来表示。然而，由于四元数有两种表示方式，
+  // info：即 (w, x, y, z) 和 (-w, -x, -y, -z)，这两种表示方式可以表示相同的旋转。在一些算法中，为了保持一致性，通常选择一种标准的表示方式。
+  // info：这段代码的目的是确保旋转 rotq 的表示方式是一致的。如果在相邻的帧之间发生了符号翻转，也就是两个相邻帧之间的旋转被反向表示了，
+  // info：这可能导致一些问题，例如计算误差的积累，从而影响算法的性能。
   if (q_diff.w() < 0) {
     this->rotq.w() = -this->rotq.w();
     this->rotq.vec() = -this->rotq.vec();
@@ -362,6 +373,8 @@ void dlo::OdomNode::publishPose() {
   this->odom.header.stamp = this->scan_stamp;
   this->odom.header.frame_id = this->odom_frame;
   this->odom.child_frame_id = this->child_frame;
+
+  // doc：nav_msgs::Odometry
   this->odom_pub.publish(this->odom);
 
   this->pose_ros.header.stamp = this->scan_stamp;
@@ -376,12 +389,14 @@ void dlo::OdomNode::publishPose() {
   this->pose_ros.pose.orientation.y = this->rotq.y();
   this->pose_ros.pose.orientation.z = this->rotq.z();
 
+  // doc：geometry_msgs::PoseStamped
   this->pose_pub.publish(this->pose_ros);
 }
 
 
 /**
  * Publish Transform
+ * info：发布tf
  **/
 
 void dlo::OdomNode::publishTransform() {
@@ -409,6 +424,7 @@ void dlo::OdomNode::publishTransform() {
 
 /**
  * Publish Keyframe Pose and Scan
+ * info：发布关键帧和位姿 
  **/
 
 void dlo::OdomNode::publishKeyframe() {
@@ -443,6 +459,7 @@ void dlo::OdomNode::publishKeyframe() {
 
 /**
  * Preprocessing
+ * info：简单预处理
  **/
 
 void dlo::OdomNode::preprocessPoints() {
@@ -451,20 +468,20 @@ void dlo::OdomNode::preprocessPoints() {
   *this->original_scan = *this->current_scan;
 
   // Remove NaNs 
-  // 移除nan点
+  // doc：移除nan点
   std::vector<int> idx;
   this->current_scan->is_dense = false;
   pcl::removeNaNFromPointCloud(*this->current_scan, *this->current_scan, idx);
 
   // Crop Box Filter
-  // 裁剪附近1m的点云，排除一些可能的外点
+  // doc: 裁剪附近1m的点云，排除一些可能的外点
   if (this->crop_use_) {
     this->crop.setInputCloud(this->current_scan);
     this->crop.filter(*this->current_scan);
   }
 
   // Voxel Grid Filter
-  // 体素将采样，论文里面说是0.25m
+  // doc：体素将采样，论文里面说是0.25m
   if (this->vf_scan_use_) {
     this->vf_scan.setInputCloud(this->current_scan);
     this->vf_scan.filter(*this->current_scan);
@@ -475,7 +492,7 @@ void dlo::OdomNode::preprocessPoints() {
 
 /**
  * Initialize Input Target
- * 一开始没有关键帧，取第一帧作为关键帧
+ * info：一开始没有关键帧，取第一帧作为关键帧,并且只做帧间s2s的配准
  **/
 
 void dlo::OdomNode::initializeInputTarget() {
@@ -489,26 +506,26 @@ void dlo::OdomNode::initializeInputTarget() {
   this->gicp_s2s.calculateTargetCovariances();
 
   // initialize keyframes
-  // this->T是当前里程计的位姿，可以理解为上一次的最优位姿传递给新的一帧作初始化
-  // 但是这里是初始化，所以this->T是单位阵或者初始化的位姿
+  // doc：this->T是当前里程计的位姿，可以理解为上一次的最优位姿传递给新的一帧作初始化
+  // doc：但是这里是初始化，所以this->T是单位阵或者初始化的位姿
   pcl::PointCloud<PointType>::Ptr first_keyframe (new pcl::PointCloud<PointType>);
   pcl::transformPointCloud (*this->target_cloud, *first_keyframe, this->T);
 
   // voxelization for submap
-  // 降采样
+  // doc: 降采样
   if (this->vf_submap_use_) {
     this->vf_submap.setInputCloud(first_keyframe);
     this->vf_submap.filter(*first_keyframe);
   }
 
   // keep history of keyframes
-  // 存储历史信息vector，存储pair（pose，点云）是单位阵或者初始化的位姿
+  // doc：存储历史信息vector，存储pair（pose，点云）是单位阵或者初始化的位姿
   this->keyframes.push_back(std::make_pair(std::make_pair(this->pose, this->rotq), first_keyframe));
   *this->keyframes_cloud += *first_keyframe;
   *this->keyframe_cloud = *first_keyframe;
 
   // compute kdtree and keyframe normals (use gicp_s2s input source as temporary storage because it will be overwritten by setInputSources())
-  // calculateSourceCovariances计算每个点的协方差矩阵并存储，keyframe_normals存储了每个关键帧的点云协方差
+  // doc：calculateSourceCovariances计算每个点的协方差矩阵并存储，keyframe_normals存储了每个关键帧的点云协方差
   this->gicp_s2s.setInputSource(this->keyframe_cloud);
   this->gicp_s2s.calculateSourceCovariances();
   this->keyframe_normals.push_back(this->gicp_s2s.getSourceCovariances());
@@ -544,11 +561,16 @@ void dlo::OdomNode::setInputSources(){
 
 /**
  * Gravity Alignment
+ * info: 这个函数的功能是通过imu确定出起始的姿态, 防止地图由于起始位姿倾斜,参见github的issue:
+ * info: If you are not using gravity alignment, DLO's reference frame depends on its initial orientation (so if the initial orientation is tilted,
+ * info: the entire map will be tilted). Try starting DLO with your sensor on a flat surface. If you are using gravity alignment, 
+ * info: make sure your LiDAR and IMU are horizontally-aligned otherwise it will not work (and that your IMU is sufficiently high-quality).
  **/
 
 void dlo::OdomNode::gravityAlign() {
 
   // get average acceleration vector for 1 second and normalize
+  // doc:收集1分钟的imu线加速度数据取平均
   Eigen::Vector3f lin_accel = Eigen::Vector3f::Zero();
   const double then = ros::Time::now().toSec();
   int n=0;
@@ -561,10 +583,12 @@ void dlo::OdomNode::gravityAlign() {
   lin_accel[0] /= n; lin_accel[1] /= n; lin_accel[2] /= n;
 
   // normalize
+  // doc: 归一化
   double lin_norm = sqrt(pow(lin_accel[0], 2) + pow(lin_accel[1], 2) + pow(lin_accel[2], 2));
   lin_accel[0] /= lin_norm; lin_accel[1] /= lin_norm; lin_accel[2] /= lin_norm;
 
   // define gravity vector (assume point downwards)
+  // doc: 重力方向,竖直
   Eigen::Vector3f grav;
   grav << 0, 0, 1;
 
@@ -595,17 +619,20 @@ void dlo::OdomNode::gravityAlign() {
 
 /**
  * Initialize 6DOF
+ * info：里程计初始化
  **/
 
 void dlo::OdomNode::initializeDLO() {
 
   // Calibrate IMU
-  // imu的回调函数中会进行矫正
+  // doc：imu的回调函数中会进行矫正
   if (!this->imu_calibrated && this->imu_use_) {
     return;
   }
 
   // Gravity Align
+  // doc：重力对准：
+  // doc:条件    :gravity_align开启   imu_use开启   imu_calibrated矫正后才会接收    initial_pose_use如果指定初始pose就不用进行重力配准
   if (this->gravity_align_ && this->imu_use_ && this->imu_calibrated && !this->initial_pose_use_) {
     std::cout << "Aligning to gravity... "; std::cout.flush();
     this->gravityAlign();
@@ -657,14 +684,14 @@ void dlo::OdomNode::icpCB(const sensor_msgs::PointCloud2ConstPtr& pc) {
   }
 
   // DLO Initialization procedures (IMU calib, gravity align)
-  // 初始化：imu对齐、初始位姿初始化
+  // info：初始化：imu对齐、初始位姿初始化
   if (!this->dlo_initialized) {
     this->initializeDLO();
     return;
   }
 
   // Preprocess points
-  // 预处理阶段：裁剪附近1m点云+体素降采样
+  // doc: 预处理阶段：裁剪附近1m点云+体素降采样
   this->preprocessPoints();
 
   // Compute Metrics
@@ -673,7 +700,7 @@ void dlo::OdomNode::icpCB(const sensor_msgs::PointCloud2ConstPtr& pc) {
   this->metrics_thread.detach();
 
   // Set Adaptive Parameters
-  // info：自适应参数默认开启
+  // info：自适应参数默认开启,根据前面计算的信息量决定关键帧的采样距离
   if (this->adaptive_params_use_){
     this->setAdaptiveParams();
   }
@@ -691,7 +718,7 @@ void dlo::OdomNode::icpCB(const sensor_msgs::PointCloud2ConstPtr& pc) {
   this->source_cloud = this->current_scan;
 
   // Set new frame as input source for both gicp objects
-  // 对s2s和s2m两个gicp点云配准器设置source点云，KdTree的build过程只会只会执行一次
+  // info: 对s2s和s2m两个gicp点云配准器设置source点云，KdTree的build过程只会只会执行一次
   this->setInputSources();
 
   // Get the next pose via IMU + S2S + S2M
@@ -893,7 +920,6 @@ void dlo::OdomNode::getNextPose() {
   // Update next global pose
   // Both source and target clouds are in the global frame now, so tranformation is global
   // doc：更新全局位姿
-  // ???: 怎么有那么多个全局位姿变量，需要理清楚
   this->propagateS2M();
 
   // Set next target cloud as current source cloud
@@ -1040,6 +1066,7 @@ void dlo::OdomNode::transformCurrentScan() {
 
 /**
  * Compute Metrics
+ * info: 计算自适应参数
  **/
 
 void dlo::OdomNode::computeMetrics() {
@@ -1049,6 +1076,7 @@ void dlo::OdomNode::computeMetrics() {
 
 /**
  * Compute Spaciousness of Current Scan
+ * info: 计算信息量,用于决定关键帧采样距离
  **/
 
 void dlo::OdomNode::computeSpaciousness() {
@@ -1062,7 +1090,7 @@ void dlo::OdomNode::computeSpaciousness() {
   }
 
   // median 
-  // 求中位数
+  // doc: 求中位数
   std::nth_element(ds.begin(), ds.begin() + ds.size()/2, ds.end()); // 此函数使ds.begin() + ds.size()/2位置的大小是正确的，即中位数
   float median_curr = ds[ds.size()/2];
   static float median_prev = median_curr;
@@ -1464,6 +1492,7 @@ bool dlo::OdomNode::saveTrajectory(direct_lidar_odometry::save_traj::Request& re
 
 /**
  * Debug Statements
+ * info：debug函数，终端显示的部分
  **/
 
 void dlo::OdomNode::debug() {

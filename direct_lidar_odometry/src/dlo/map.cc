@@ -11,6 +11,7 @@
 
 std::atomic<bool> dlo::MapNode::abort_(false);
 
+// info: 这个节点没什么关键信息, 主要就是发布全局地图和保存
 
 /**
  * Constructor
@@ -20,18 +21,23 @@ dlo::MapNode::MapNode(ros::NodeHandle node_handle) : nh(node_handle) {
 
   this->getParams();
 
+  // doc: 关闭node
   this->abort_timer = this->nh.createTimer(ros::Duration(0.01), &dlo::MapNode::abortTimerCB, this);
 
+  // doc: 发布全局地图, 调用 this->map_pub
   if (this->publish_full_map_){
     this->publish_timer = this->nh.createTimer(ros::Duration(this->publish_freq_), &dlo::MapNode::publishTimerCB, this);
   }
   
+  // doc: 全局地图叠加
   this->keyframe_sub = this->nh.subscribe("keyframes", 1, &dlo::MapNode::keyframeCB, this);
   this->map_pub = this->nh.advertise<sensor_msgs::PointCloud2>("map", 1);
 
+  // doc: 保存地图服务
   this->save_pcd_srv = this->nh.advertiseService("save_pcd", &dlo::MapNode::savePcd, this);
 
   // initialize map
+  // doc: 地图初始化
   this->dlo_map = pcl::PointCloud<PointType>::Ptr (new pcl::PointCloud<PointType>);
 
   ROS_INFO("DLO Map Node Initialized");
@@ -135,6 +141,7 @@ void dlo::MapNode::keyframeCB(const sensor_msgs::PointCloud2ConstPtr& keyframe) 
   this->map_stamp = keyframe->header.stamp;
   *this->dlo_map += *keyframe_pcl;
 
+  // doc: 如果没有发布全局地图的话,改为发一帧关键帧
   if (!this->publish_full_map_) {
     if (keyframe_pcl->points.size() == keyframe_pcl->width * keyframe_pcl->height) {
       sensor_msgs::PointCloud2 map_ros;
