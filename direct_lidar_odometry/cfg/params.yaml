@@ -36,11 +36,11 @@ dlo:
           res: 0.5
 
     keyframe:
-      threshD: 5.0
-      threshR: 45.0
+      threshD: 5.0    # 关键帧距离, 越小数量越多
+      threshR: 45.0   # 关键帧角度差
 
     submap:
-      keyframe:
+      keyframe:   # 这几个是获取submap的最小距离,越大越好
         knn: 10
         kcv: 10
         kcc: 10
@@ -52,18 +52,18 @@ dlo:
     gicp:
       minNumPoints: 10
       s2s:
-        kCorrespondences: 10
-        maxCorrespondenceDistance: 1.0
-        maxIterations: 32
-        transformationEpsilon: 0.01
-        euclideanFitnessEpsilon: 0.01
-        ransac:
+        kCorrespondences: 10    # 这个不记得了
+        maxCorrespondenceDistance: 1.0  # 这个参数是近邻关系的最大阈值, 超过就忽略
+        maxIterations: 32               # 越大越好
+        transformationEpsilon: 0.01     # 收敛系数 越小越好
+        euclideanFitnessEpsilon: 0.01   # 和上面那个差不多
+        ransac:           # 剔除噪点的
           iterations: 5
           outlierRejectionThresh: 1.0
-      s2m:
+      s2m:                              # 同上
         kCorrespondences: 20
         maxCorrespondenceDistance: 0.5
-        maxIterations: 32
+        maxIterations: 32                                         
         transformationEpsilon: 0.01
         euclideanFitnessEpsilon: 0.01
         ransac:
