@@ -4,7 +4,7 @@
   - 主要流程：
 
     <div align="center">
-    <img src="notes/floam/floam.png" width=80% />
+    <img src="./notes/floam/floam.png" width=80% />
     </div>
 
 - ✔ **direct_lidar_odemetry**：[📖[文献解读]](https://zhuanlan.zhihu.com/p/677991232)$~~~$[⌨[code详细注释]](https://github.com/YZH-bot/SLAM_NOTED/tree/master/direct_lidar_odometry)
