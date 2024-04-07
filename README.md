@@ -2,7 +2,13 @@
 该repo主要记录对目前SLAM算法的注释版本，包括：
 - ✔ **FLOAM**：[⌨[code详细注释]](https://github.com/YZH-bot/SLAM_NOTED/tree/master/floam)
   - 主要流程：
-    <td> <p align="center"><img src="notes/floam/floam.png" alt="animated" height="200" /></p> </td>
+    <table>
+    <tbody>
+        <tr>
+            <td> <p align="center"><img src="notes/floam/floam.png" alt="animated" height="360" /></p> </td>
+        </tr>
+    </tbody>
+    </table>
 
 - ✔ **direct_lidar_odemetry**：[📖[文献解读]](https://zhuanlan.zhihu.com/p/677991232)$~~~$[⌨[code详细注释]](https://github.com/YZH-bot/SLAM_NOTED/tree/master/direct_lidar_odometry)
 - **fast_gicp**: [code解析详情：fastgicp](https://github.com/YZH-bot/SLAM_NOTED/tree/master/fast_gicp) [working on]
