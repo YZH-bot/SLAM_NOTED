@@ -1,4 +1,5 @@
 .vscode
 direct_lidar_inertial_odometry/
-floam/
 SC-FLOAM/
+faster-lio/
+Livox-Mapping/

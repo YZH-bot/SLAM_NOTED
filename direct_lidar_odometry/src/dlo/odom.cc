@@ -570,7 +570,7 @@ void dlo::OdomNode::setInputSources(){
 void dlo::OdomNode::gravityAlign() {
 
   // get average acceleration vector for 1 second and normalize
-  // doc:收集1分钟的imu线加速度数据取平均
+  // doc:收集1s的imu线加速度数据取平均
   Eigen::Vector3f lin_accel = Eigen::Vector3f::Zero();
   const double then = ros::Time::now().toSec();
   int n=0;
