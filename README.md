@@ -5,7 +5,7 @@
     <table>
     <tbody>
         <tr>
-            <td> <p align="center"><img src="notes/floam/floam.png" alt="animated" height="360" /></p> </td>
+            <td> <p align="center"><img src="./notes/floam/floam.png" alt="animated" height="360" /></p> </td>
         </tr>
     </tbody>
     </table>
