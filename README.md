@@ -12,4 +12,4 @@
 - **LIO-SAM**：[working on]
 - **direct_inertial_lidar_odemetry**：[todo]
 
-    <img src="SLAM_NOTED/notes/floam/floam.png" width=360 />
+<img src="./notes/floam/floam.png" height="360">
