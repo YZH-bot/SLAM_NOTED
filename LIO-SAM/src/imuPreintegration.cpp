@@ -182,9 +182,11 @@ public:
     }
 };
 
-// info: IMUPreintegration
-// info: 用激光里程计，两帧激光里程计之间的IMU预计分量构建因子图，优化当前帧的状态（包括位姿、速度、偏置）;
-// info: 以优化后的状态为基础，施加IMU预计分量，得到每一时刻的IMU里程计。
+// doc: 用激光里程计，两帧激光里程计之间的IMU预计分量构建因子图，优化当前帧的状态（包括位姿、速度、偏置）;
+// doc: 以优化后的状态为基础，施加IMU预计分量，得到每一时刻的IMU里程计。
+// doc: IMU信号积分使用gtsam的IMU预积分模块。里面共使用了两个队列，imuQueImu和imuQueOpt，以及两个预积分器imuPreintegratorImu和imuPreintegratorOpt;
+// doc: imuQueOpt和imuPreintegratorOpt主要是根据历史信息计算IMU数据bias给真正的IMU里程计预积分器使用。
+// doc: imuQueImu和imuPreintegratorImu是真正用来做IMU里程计的优化。
 class IMUPreintegration : public ParamServer
 {
 public:
@@ -205,7 +207,9 @@ public:
     gtsam::Vector noiseModelBetweenBias;
 
     // info: imu预积分器
+    // doc: 优化IMU参数：imuIntegratorOpt_ 负责预积分两帧激光里程计之间的IMU数据，计算IMU的bias
     gtsam::PreintegratedImuMeasurements *imuIntegratorOpt_;
+    // doc: 输出位姿：imuIntegratorImu_ 根据最新的激光里程计，以及后续到到的IMU数据，预测从当前激光里程计往后的位姿（IMU里程计）
     gtsam::PreintegratedImuMeasurements *imuIntegratorImu_;
 
     // info: imu数据队列
@@ -323,11 +327,11 @@ public:
         double currentCorrectionTime = ROS_TIME(odomMsg);
 
         // make sure we have imu data to integrate
-        // info: 确保imu优化队列中有imu数据进行预积分
+        // doc: 确保imu优化队列中有imu数据进行预积分
         if (imuQueOpt.empty())
             return;
 
-        // info: 当前帧激光位姿，来自mapOptimization scan-to-map匹配、因子图优化后的位姿
+        // doc: 当前帧激光位姿，来自mapOptimization scan-to-map匹配、因子图优化后的位姿
         float p_x = odomMsg->pose.pose.position.x;
         float p_y = odomMsg->pose.pose.position.y;
         float p_z = odomMsg->pose.pose.position.z;
@@ -335,19 +339,18 @@ public:
         float r_y = odomMsg->pose.pose.orientation.y;
         float r_z = odomMsg->pose.pose.orientation.z;
         float r_w = odomMsg->pose.pose.orientation.w;
-        // info: 判断里程计是否退化，这个会在后端中说明，什么时候会退化，退化的精度会下降
+        // doc: 判断里程计是否退化，这个会在后端中说明，什么时候会退化，退化的精度会下降
+        // ?
         bool degenerate = (int)odomMsg->pose.covariance[0] == 1 ? true : false;
         gtsam::Pose3 lidarPose = gtsam::Pose3(gtsam::Rot3::Quaternion(r_w, r_x, r_y, r_z), gtsam::Point3(p_x, p_y, p_z));
 
-        // 0. initialize system
-        // info: 系统初始化，第一帧
+        // doc: 系统初始化，在第一帧或者优化出错的情况下重新初始化
         if (systemInitialized == false)
         {
-            // info: 重置ISAM2优化器
+            // doc: 重置ISAM2优化器
             resetOptimization();
 
-            // pop old IMU message
-            // info: 从imu优化队列中删除当前帧激光里程计时刻之前的imu数据
+            // doc: 从imu优化队列中删除当前帧激光里程计时刻之前的imu数据
             while (!imuQueOpt.empty())
             {
                 if (ROS_TIME(&imuQueOpt.front()) < currentCorrectionTime - delta_t)
@@ -372,78 +375,90 @@ public:
              *  插入速度
              *  插入零偏
             */
-            // info:  把雷达的位姿转移到imu坐标系下         // initial pose 
+            // doc:  把雷达的位姿转移到imu坐标系下         // initial pose 
             prevPose_ = lidarPose.compose(lidar2Imu);
-            // info: X(0)表示第一个位姿，有一个先验的约束。约束内容为，lidar到imu下的prevPose_这么一个位姿
-            // info: 该约束的权重，置信度为priorPoseNoise，越小代表置信度越高
+            // doc: X(0)表示第一个位姿，有一个先验的约束。约束内容为，lidar到imu下的prevPose_这么一个位姿
+            // doc: 该约束的权重，置信度为priorPoseNoise，越小代表置信度越高
             gtsam::PriorFactor<gtsam::Pose3> priorPose(X(0), prevPose_, priorPoseNoise);
-            // info: 约束加入到因子图中
+            // doc: 加入 priorPose 因子
             graphFactors.add(priorPose);    // gtsam::NonlinearFactorGraph graphFactors; 因子图
-            // initial velocity
-            // info：不知道初始速度为多少，随意设置了一个0，置信度是非常大的        
-            // ???： 感觉速度可以用 imu 初始化
+            // doc: 初始化速度因子 priorVel 为 0 
+            // doc： 感觉速度可以用 imu 初始化
             prevVel_ = gtsam::Vector3(0, 0, 0);
             gtsam::PriorFactor<gtsam::Vector3> priorVel(V(0), prevVel_, priorVelNoise);
             graphFactors.add(priorVel);
-            // initial bias
-            // info：初始化imu bias = 0
+
+            // doc: 加入 priorBias 因子
             prevBias_ = gtsam::imuBias::ConstantBias();
             gtsam::PriorFactor<gtsam::imuBias::ConstantBias> priorBias(B(0), prevBias_, priorBiasNoise);
             graphFactors.add(priorBias);
-            // add values
-            // info: 添加完约束，需要添加实际的状态量
+
+            // doc: 将初始状态设置为因子图变量的初始值
             graphValues.insert(X(0), prevPose_);
             graphValues.insert(V(0), prevVel_);
             graphValues.insert(B(0), prevBias_);
-            // optimize once
-            // info: 把优化和约束一起送到优化器中
+
+            // doc: 加入新的因子，并使用优化器对因子图做一次优化
+            // doc: 可以多次调用update()对当前的因子图进行多次更新
             optimizer.update(graphFactors, graphValues);
-            // info: 进入优化器之后保存约束和状态量的变量就清零
-            // ???： 具体原理
+
+            // doc: 进入优化器之后保存约束和状态量的变量就清零
+            // doc: 清空因子图。因子已经已经被记录到优化器中。这是在gtsam的官方example的递增式优化流程中的用法
+            // doc: example:gtsam/examples/VisualSAM2Example.cpp
+            // ?
             graphFactors.resize(0);
             graphValues.clear();
 
-            // info：预积分的接口，使用零偏进行初始化
+            // doc: 重置两个预积分器
             imuIntegratorImu_->resetIntegrationAndSetBias(prevBias_);
             imuIntegratorOpt_->resetIntegrationAndSetBias(prevBias_);
 
             key = 1;
+            // doc: 设置系统已经初始化标志位
             systemInitialized = true;
             return;
         }
 
-        // reset graph for speed
+        // doc: 每100帧lidar里程计重置一下优化器
+        // doc: 删除旧因子图，加快优化速度
+        // INFO: 
+        // doc: 讨论：Liosam这个预积分的子图不是滑窗，传统滑窗是新增一帧，边缘化掉旧帧，维持滑窗尺寸不变。这里直接累积到100帧再优化，
+        // doc: 一次性边缘化只保留最新帧，然后reset了……这样会用旧的bias导致预测的旋转在前后几帧表现出来差异太大，可视化的效果就是imu
+        // doc: 预测轨迹成折线，估计是作者考虑到滑窗实现的问题，才这么整的。尽管gtsam中有fix lag smoother，但估计是考虑用isam，其实
+        // doc: 现方法还是有点问题，没有去同步处理旧的这些factor啥的，导致其内存占用会缓慢增长。
         if (key == 100)
         {
-            // get updated noise before reset
+            // doc: 从优化器中先缓存一下当前优化出来的变量的方差的
             gtsam::noiseModel::Gaussian::shared_ptr updatedPoseNoise = gtsam::noiseModel::Gaussian::Covariance(optimizer.marginalCovariance(X(key - 1)));
             gtsam::noiseModel::Gaussian::shared_ptr updatedVelNoise = gtsam::noiseModel::Gaussian::Covariance(optimizer.marginalCovariance(V(key - 1)));
             gtsam::noiseModel::Gaussian::shared_ptr updatedBiasNoise = gtsam::noiseModel::Gaussian::Covariance(optimizer.marginalCovariance(B(key - 1)));
-            // reset graph
+            // doc: 重置优化器和因子图
             resetOptimization();
-            // add pose
+            // doc: 把上一次优化出的位姿作为重新初始化的priorPose
             gtsam::PriorFactor<gtsam::Pose3> priorPose(X(0), prevPose_, updatedPoseNoise);
             graphFactors.add(priorPose);
-            // add velocity
+            // doc: 把上一次优化出的速度作为重新初始化的priorVel
             gtsam::PriorFactor<gtsam::Vector3> priorVel(V(0), prevVel_, updatedVelNoise);
             graphFactors.add(priorVel);
-            // add bias
+            // doc: 把上一次优化出的bias作为重新初始化的priorBias
             gtsam::PriorFactor<gtsam::imuBias::ConstantBias> priorBias(B(0), prevBias_, updatedBiasNoise);
             graphFactors.add(priorBias);
-            // add values
+            // doc: 将prior状态设置成初始估计值
             graphValues.insert(X(0), prevPose_);
             graphValues.insert(V(0), prevVel_);
             graphValues.insert(B(0), prevBias_);
-            // optimize once
+            // doc: 进行一次迭代优化
             optimizer.update(graphFactors, graphValues);
+            // doc: 清空因子图和值（已经被保存进优化器里了）
             graphFactors.resize(0);
             graphValues.clear();
 
+            // doc: 重置因子索引
             key = 1;
         }
 
-        // info：加入imu数据
-        // 1. integrate imu data and optimize
+        // doc: 将imuQueOpt队列中，所有早于当前雷达里程计的数据进行积分，获取最新的IMU bias
+        // info: 就是这里会出现断层，以前的imu信息只保留了结果，这里重新用新的进行更新，可能就会导致imu优化的出来的参数和原来的差距比较大
         while (!imuQueOpt.empty())
         {
             // pop and integrate imu data that is between two optimizations
@@ -454,7 +469,7 @@ public:
             {
                 // 时间差
                 double dt = (lastImuT_opt < 0) ? (1.0 / 500.0) : (imuTime - lastImuT_opt);
-                // 调用预积分接口把imu数据送进去处理
+                // doc: 这里是实际做积分的地方
                 imuIntegratorOpt_->integrateMeasurement(
                     gtsam::Vector3(thisImu->linear_acceleration.x, thisImu->linear_acceleration.y, thisImu->linear_acceleration.z),
                     gtsam::Vector3(thisImu->angular_velocity.x, thisImu->angular_velocity.y, thisImu->angular_velocity.z), dt);
@@ -465,62 +480,72 @@ public:
             else
                 break;
         }
-        // info：以下加ImuFactor，零偏约束
-        // add imu factor to graph
+
+        // info: 下面这一大部分是使用IMU预积分的结果加入因子图中，同时，加入雷达里程计因子，使用优化器优化因子图得出当前IMU对应的Bias。
+        // doc: 使用IMU预积分的结果构建IMU因子，并加入因子图中
         const gtsam::PreintegratedImuMeasurements &preint_imu = dynamic_cast<const gtsam::PreintegratedImuMeasurements &>(*imuIntegratorOpt_);
-        // info：预积分他会对多个状态进行约束，包括相邻两帧的位姿、速度和零偏
-        // info：上一帧的速度和位姿，当前帧的速度和位姿还有上一帧的零偏
+        // doc: 上一帧的速度和位姿，当前帧的速度和位姿还有上一帧的零偏，以及imu预积分测量
+        // doc: imu 因子连接相邻两个状态，并且包括了这两帧之间的imu测量，很合理吧
         gtsam::ImuFactor imu_factor(X(key - 1), V(key - 1), X(key), V(key), B(key - 1), preint_imu);
-        // info：加入因子图 
         graphFactors.add(imu_factor);
-        // add imu bias between factor
-        // ???: 这一步理解 imu零偏约束
+        // doc: 添加IMU的bias的BetweenFactor
+        // doc: 这里的 deltaTij()获取的是IMU预积分器从上一次积分输入到当前输入的时间
+        // doc: noiseModelBetweenBias是我们提前标定的IMU的偏差的噪声
+        // doc: 两者的乘积就等于这两个时刻之间IMU偏差的漂移
+        // ?: deltaTij
+        // doc：说白了，这里应该是告诉因子图，这两个imu bias状态已经连接了，记得给我优化
         graphFactors.add(gtsam::BetweenFactor<gtsam::imuBias::ConstantBias>(B(key - 1), B(key), gtsam::imuBias::ConstantBias(),
                                                                             gtsam::noiseModel::Diagonal::Sigmas(sqrt(imuIntegratorOpt_->deltaTij()) * noiseModelBetweenBias)));
-        // info：以上添加完预积分的约束
 
-        // info：以下添加雷达的位姿约束，设定因子图的初值
-        // add pose factor
-        // 将 map_node 的位姿转换到IMU坐标系下
+        // info：以下添加雷达的位姿约束
         gtsam::Pose3 curPose = lidarPose.compose(lidar2Imu);
-        // info：作为先验因子，如果是退化的话，置信度小一点
+        // doc: 作为先验因子，如果是退化的话，置信度小一点。这里的degenerate调整噪声的大小。correctionNoise2是大噪声
         gtsam::PriorFactor<gtsam::Pose3> pose_factor(X(key), curPose, degenerate ? correctionNoise2 : correctionNoise);
+        // doc: 说白了，我们只有imu是不行的，这里要用lidar（来自另后端优化）的pose初始化状态X(k), 然后才能联合优化bias
         graphFactors.add(pose_factor);
-        // insert predicted values
-        // info: 结合预积分的结果，对当前帧的位姿进行预测
-        // ??? :
+
+        // doc: imuIntegratorOpt_->predict输入之前时刻的状态和偏差，预测当前时刻的状态
         gtsam::NavState propState_ = imuIntegratorOpt_->predict(prevState_, prevBias_);
-        // info: 预测量作为初始值插入因子图中
+        // doc: 将IMU预积分的结果作为当前时刻因子图变量的初值
         graphValues.insert(X(key), propState_.pose());
         graphValues.insert(V(key), propState_.v());
         graphValues.insert(B(key), prevBias_);
+
         // optimize
-        // info: 优化两次，两次调整会得到一个好的结果
+        // doc: 优化两次，两次调整会得到一个好的结果
         optimizer.update(graphFactors, graphValues);
         optimizer.update();
+
+        // doc: 清空因子图和值（已经被保存进优化器里了）
         graphFactors.resize(0);
         graphValues.clear();
-        // Overwrite the beginning of the preintegration for the next step.
+
+        // doc: 从优化器中获取当前经过优化后估计值
         gtsam::Values result = optimizer.calculateEstimate();
-        // info: 获取优化后的当前状态作为当前帧的最佳估计
         prevPose_ = result.at<gtsam::Pose3>(X(key));
         prevVel_ = result.at<gtsam::Vector3>(V(key));
         prevState_ = gtsam::NavState(prevPose_, prevVel_);
         prevBias_ = result.at<gtsam::imuBias::ConstantBias>(B(key));
+
         // Reset the optimization preintegration object.
-        // info: 当前约束任务已经完成，预积分约束复位
-        // ??? : 
+        // doc: 重置预积分器
         imuIntegratorOpt_->resetIntegrationAndSetBias(prevBias_);
-        // check optimization
-        // info: 失败检测
+        // doc: 检查优化器优化结果，当优化出的速度过快（大于30），或者Bias过大，认为优化或者某个环节出现问题，重置优化器
         if (failureDetection(prevVel_, prevBias_))
         {
             resetParams();
             return;
         }
 
+        /**
+         * info:这一部分是将偏差优化器imuIntegratorOpt_/graphFactors优化出的结果传递到IMU里程计的预积分器。
+         * 让IMU里程计预积分器使用最新估计出来的Bias进行积分
+         *  1. 缓存最新的状态（作为IMU里程计预积分器预测时的上一时刻状态传入），和最新的偏差（重置IMU里程计预积分器时使用）
+         *  2. 同步IMU数据队列和雷达里程计时间，去除当前雷达里程计时间之前的数据
+         *  3. 对IMU队列中剩余的其他数据进行积分。（这样在新的IMU到来的时候就可以直接在这个基础上进行积分）
+        */
         // 2. after optiization, re-propagate imu odometry preintegration
-        // info: 根据最新的imu状态进行传播      注意：这里imu队列是另外一个队列了，所以要重新刷新掉旧的数据
+        // doc: 根据最新的imu状态进行传播      注意：这里imu队列是另外一个队列了，所以要重新刷新掉旧的数据
         prevStateOdom = prevState_;
         prevBiasOdom = prevBias_;
         // first pop imu message older than current correction data
