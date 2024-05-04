@@ -154,7 +154,8 @@ void ImuProcess::set_acc_bias_cov(const V3D &b_a)
   cov_bias_acc = b_a;
 }
 
-// info: imu 初始化, 只会执行一次
+// info: imu 初始化, 只会执行一次: 初始化了重力, 陀螺仪bias, 加速度计和角速度的协方差.
+// doc: IMU静止，加速度偏移(bias_a)和重力耦合，肯定是初始化不了的。必须给予足够的激励
 void ImuProcess::IMU_init(const MeasureGroup &meas, esekfom::esekf<state_ikfom, 12, input_ikfom> &kf_state, int &N)
 {
   /** 1. initializing the gravity, gyro bias, acc and gyro covariance

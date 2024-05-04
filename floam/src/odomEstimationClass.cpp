@@ -180,7 +180,7 @@ void OdomEstimationClass::addSurfCostFactor(const pcl::PointCloud<pcl::PointXYZI
         Eigen::Matrix<double, 5, 1> matB0 = -1 * Eigen::Matrix<double, 5, 1>::Ones();
         if (pointSearchSqDis[4] < 1.0)
         {
-            
+            // doc: 这里求解平面法向量, 画个图就明白为什么 An = b 其中 b = [-1, ... , -1]了, 当然1也是可以的
             for (int j = 0; j < 5; j++)
             {
                 matA0(j, 0) = map_in->points[pointSearchInd[j]].x;

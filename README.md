@@ -9,4 +9,5 @@
 - **fast_gicp**: [code解析详情：fastgicp](https://github.com/YZH-bot/SLAM_NOTED/tree/master/fast_gicp) [working on]
 - **LIO-SAM**：[working on]
 - **direct_inertial_lidar_odemetry**：[todo]
+- **VINS-mono**：[todo]
 
