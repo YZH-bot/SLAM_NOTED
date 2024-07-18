@@ -19,7 +19,7 @@ void GlobalSFM::triangulatePoint(Eigen::Matrix<double, 3, 4> &Pose0, Eigen::Matr
 	point_3d(2) = triangulated_point(2) / triangulated_point(3);
 }
 
-//PNP方法得到第l帧到第i帧的R_initial、P_initial
+// doc: PNP方法得到第l帧到第i帧的R_initial、P_initial
 bool GlobalSFM::solveFrameByPnP(Matrix3d &R_initial, Vector3d &P_initial, int i,
 								vector<SFMFeature> &sfm_f)
 {
@@ -129,7 +129,7 @@ bool GlobalSFM::construct(int frame_num, Quaterniond* q, Vector3d* T, int l,
 {
 	feature_num = sfm_f.size();
 	//cout << "set 0 and " << l << " as known " << endl;
-	//假设第l帧为原点，根据当前帧到第l帧的relative_R，relative_T，得到当前帧位姿
+	// doc: 假设第l帧为原点，根据当前帧到第l帧的relative_R，relative_T，得到当前帧位姿
 	q[l].w() = 1;
 	q[l].x() = 0;
 	q[l].y() = 0;
@@ -245,6 +245,7 @@ bool GlobalSFM::construct(int frame_num, Quaterniond* q, Vector3d* T, int l,
 
 	// doc: 6、使用cares进行全局BA优化
 	ceres::Problem problem;
+	// doc: LocalParameterization接口允许用户定义参数块并与他们所属的流形相关联；
 	ceres::LocalParameterization* local_parameterization = new ceres::QuaternionParameterization();
 	//cout << " begin full BA " << endl;
 	for (int i = 0; i < frame_num; i++)
@@ -257,12 +258,15 @@ bool GlobalSFM::construct(int frame_num, Quaterniond* q, Vector3d* T, int l,
 		c_rotation[i][1] = c_Quat[i].x();
 		c_rotation[i][2] = c_Quat[i].y();
 		c_rotation[i][3] = c_Quat[i].z();
+		// doc: 在调用AddResidualBlock()时其实已经隐式地向Problem传递了参数模块，但在一些情况下，需要用户显示地向Problem传入参数模块（通常出现在需要对优化参数进行重新参数化的情况）
 		problem.AddParameterBlock(c_rotation[i], 4, local_parameterization);
 		problem.AddParameterBlock(c_translation[i], 3);
+		// doc: 固定旋转
 		if (i == l)
 		{
 			problem.SetParameterBlockConstant(c_rotation[i]);
 		}
+		// doc: 固定平移和旋转
 		if (i == l || i == frame_num - 1)
 		{
 			problem.SetParameterBlockConstant(c_translation[i]);
@@ -279,7 +283,7 @@ bool GlobalSFM::construct(int frame_num, Quaterniond* q, Vector3d* T, int l,
 			ceres::CostFunction* cost_function = ReprojectionError3D::Create(
 												sfm_f[i].observation[j].second.x(),
 												sfm_f[i].observation[j].second.y());
-
+			// doc: sfm_f[i].position 是属于隐式传参
     		problem.AddResidualBlock(cost_function, NULL, c_rotation[l], c_translation[l], 
     								sfm_f[i].position);	 
 		}
@@ -302,7 +306,7 @@ bool GlobalSFM::construct(int frame_num, Quaterniond* q, Vector3d* T, int l,
 		return false;
 	}
 	
-	//这里得到的是第l帧坐标系到各帧的变换矩阵，应将其转变为各帧在第l帧坐标系上的位姿
+	// doc: 这里得到的是第l帧坐标系到各帧的变换矩阵，应将其转变为各帧在第l帧坐标系上的位姿
 	for (int i = 0; i < frame_num; i++)
 	{
 		q[i].w() = c_rotation[i][0]; 

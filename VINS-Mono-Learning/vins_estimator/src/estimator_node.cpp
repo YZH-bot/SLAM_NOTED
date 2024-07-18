@@ -370,7 +370,7 @@ void process()
             {
                 // doc: 考虑单目和双目的存储情况
                 int v = img_msg->channels[0].values[i] + 0.5;
-                int feature_id = v / NUM_OF_CAM;    // doc: 特征id 
+                int feature_id = v / NUM_OF_CAM;    // doc: 特征id，就是前端发过来的id
                 int camera_id = v % NUM_OF_CAM;     // doc: 单目默认为0，双目为0或1
 
                 double x = img_msg->points[i].x;

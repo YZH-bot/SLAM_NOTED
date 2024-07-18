@@ -898,6 +898,7 @@ public:
 				K_ = P_temp.inverse() * h_x_.transpose() * R_in;
 			#else
 				Eigen::Matrix<scalar_type, Eigen::Dynamic, Eigen::Dynamic> R_in = (h_v_*R*h_v_.transpose()).inverse();
+				// doc: 对应论文 fast-lio1 公式(20)
 				K_ = (h_x_.transpose() * R_in * h_x_ + P_.inverse()).inverse() * h_x_.transpose() * R_in;
 			#endif 
 			}
@@ -1665,6 +1666,10 @@ public:
 			
 			// doc: 这一大段都在求协方差的先验更新，大致上是P=(J^-1)*P*(J^-T)如论文式16~18
 			// doc: 以下为计算 【先验】 的协方差矩阵，对应到公式(18)计算P矩阵的过程​
+
+			// doc：state x_中包含了下面两个数据成员
+			// doc：std::vector<std::pair<int, int> > S2_state;
+			// doc：std::vector<std::pair<int, int> > SO3_state;
 			Matrix<scalar_type, 3, 3> res_temp_SO3;
 			MTK::vect<3, scalar_type> seg_SO3;
 			for (std::vector<std::pair<int, int> >::iterator it = x_.SO3_state.begin(); it != x_.SO3_state.end(); it++) {
@@ -1811,6 +1816,7 @@ public:
 				*/
 				cov P_inv = P_temp.inverse();
 				//std::cout << "line 1781" << std::endl;
+				// doc： dyn_share.h 是点面观测残差
 				K_h = P_inv. template block<n, 12>(0, 0) * h_x_.transpose() * dyn_share.h;
 				//std::cout << "line 1780" << std::endl;
 				//cov HTH_cur = cov::Zero();
@@ -1824,6 +1830,7 @@ public:
 			//doc: 得到error state的最优估计​
 			//K_x = K_ * h_x_;
 			Matrix<scalar_type, n, 1> dx_ = K_h + (K_x - Matrix<scalar_type, n, n>::Identity()) * dx_new; 
+			// std::cout << dx_.rows() << std::endl;
 			state x_before = x_;
 			// doc: 更新状态量​
 			x_.boxplus(dx_);

@@ -13,6 +13,10 @@ void getTransformFromSe3(const Eigen::Matrix<double,6,1>& se3, Eigen::Quaternion
 
 Eigen::Matrix3d skew(Eigen::Vector3d& mat_in);
 
+// doc: floam 自定义cost function并且进行解析求导:
+// doc: 当导数存在闭合解析形式时使用，用于可基于SizedCostFunction基类自行编写，但由于需要自行管理残差和雅克比矩阵，
+// doc: 除非闭合解具有具有明显的精度和效率优势，否则同样不建议使用。AutoDiffCostFunctio自动求导较为常用, VINS-mono中的BA就用了这种方式
+// doc: https://zhuanlan.zhihu.com/p/664810032
 class EdgeAnalyticCostFunction : public ceres::SizedCostFunction<1, 7> {
 	public:
 

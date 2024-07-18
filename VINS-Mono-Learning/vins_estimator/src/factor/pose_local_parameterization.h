@@ -4,6 +4,7 @@
 #include <ceres/ceres.h>
 #include "../utility/utility.h"
 
+// ???
 class PoseLocalParameterization : public ceres::LocalParameterization
 {
     virtual bool Plus(const double *x, const double *delta, double *x_plus_delta) const;

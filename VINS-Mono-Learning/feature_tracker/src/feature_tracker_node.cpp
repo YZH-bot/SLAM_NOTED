@@ -134,10 +134,10 @@ void img_callback(const sensor_msgs::ImageConstPtr &img_msg)
             break;
     }
 
-    // 1、将特征点id，矫正后归一化平面的3D点(x,y,z=1)，像素2D点(u,v)，像素的速度(vx,vy)，
-    // 封装成sensor_msgs::PointCloudPtr类型的feature_points实例中,发布到pub_img;
-    // 2、将图像封装到cv_bridge::cvtColor类型的ptr实例中发布到pub_match
-    //  doc: 只会发布track到的特征点, 新提取的特征点并没有发布
+    // doc：1、将特征点id，矫正后归一化平面的3D点(x,y,z=1)，像素2D点(u,v)，像素的速度(vx,vy)，
+    // doc：封装成sensor_msgs::PointCloudPtr类型的feature_points实例中,发布到pub_img;
+    // doc：2、将图像封装到cv_bridge::cvtColor类型的ptr实例中发布到pub_match
+    // doc: 只会发布track到的特征点, 新提取的特征点并没有发布
     if (PUB_THIS_FRAME)
     {
         pub_count++;
@@ -155,12 +155,12 @@ void img_callback(const sensor_msgs::ImageConstPtr &img_msg)
         for (int i = 0; i < NUM_OF_CAM; i++)    // doc: 单目时 i = 0
         {
             auto &un_pts = trackerData[i].cur_un_pts;
-            auto &cur_pts = trackerData[i].cur_pts;
-            auto &ids = trackerData[i].ids;
+            auto &cur_pts = trackerData[i].cur_pts; // doc: 当前帧的特征点
+            auto &ids = trackerData[i].ids;         // doc：id是逐渐递增的，以前用过的数字不会复用
             auto &pts_velocity = trackerData[i].pts_velocity;
             for (unsigned int j = 0; j < ids.size(); j++) // doc: 特征点数量
             {
-                if (trackerData[i].track_cnt[j] > 1)
+                if (trackerData[i].track_cnt[j] > 1)    // doc: 剔除掉新提取的特征点
                 {
                     int p_id = ids[j];
                     hash_ids[i].insert(p_id);

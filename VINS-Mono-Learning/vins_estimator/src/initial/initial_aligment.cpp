@@ -132,8 +132,8 @@ void RefineGravity(map<double, ImageFrame> &all_image_frame, Vector3d &g, Vector
             //MatrixXd cov_inv = cov.inverse();
             cov_inv.setIdentity();
 
-            MatrixXd r_A = tmp_A.transpose() * cov_inv * tmp_A;
-            VectorXd r_b = tmp_A.transpose() * cov_inv * tmp_b;
+            MatrixXd r_A = tmp_A.transpose() * cov_inv * tmp_A; // doc: 9*9
+            VectorXd r_b = tmp_A.transpose() * cov_inv * tmp_b; // doc: 9*1
 
             A.block<6, 6>(i * 3, i * 3) += r_A.topLeftCorner<6, 6>();
             b.segment<6>(i * 3) += r_b.head<6>();

@@ -179,7 +179,7 @@ void FeatureTracker::readImage(const cv::Mat &_img, double _cur_time)
     for (auto &n : track_cnt)
         n++;
 
-    // doc: PUB_THIS_FRAME=1 需要发布特征点
+    // doc: PUB_THIS_FRAME=1 需要发布特征点给后端
     if (PUB_THIS_FRAME)
     {
         // doc: 通过基本矩阵剔除outliers

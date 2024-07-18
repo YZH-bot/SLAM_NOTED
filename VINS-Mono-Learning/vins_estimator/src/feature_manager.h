@@ -69,7 +69,7 @@ class FeaturePerId
 
     Vector3d gt_p;
 
-    FeaturePerId(int _feature_id, int _start_frame)  //以feature_id为索引，并保存了出现该角点的第一帧的id
+    FeaturePerId(int _feature_id, int _start_frame)  // doc: 以feature_id为索引，并保存了出现该角点的第一帧的id
         : feature_id(_feature_id), start_frame(_start_frame),
           used_num(0), estimated_depth(-1.0), solve_flag(0)
     {

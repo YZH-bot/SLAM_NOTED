@@ -27,6 +27,7 @@ struct ReprojectionError3D
 		:observed_u(observed_u), observed_v(observed_v)
 		{}
 
+	// doc: 计算残差
 	template <typename T>
 	bool operator()(const T* const camera_R, const T* const camera_T, const T* point, T* residuals) const
 	{
@@ -40,6 +41,7 @@ struct ReprojectionError3D
     	return true;
 	}
 
+	// doc: 
 	static ceres::CostFunction* Create(const double observed_x,
 	                                   const double observed_y) 
 	{

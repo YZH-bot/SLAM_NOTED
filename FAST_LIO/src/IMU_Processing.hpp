@@ -359,7 +359,7 @@ void ImuProcess::UndistortPcl(const MeasureGroup &meas, esekfom::esekf<state_ikf
       M3D R_i(R_imu * Exp(angvel_avr, dt));     // doc: 点所在时刻的旋转, world下
       
       V3D P_i(it_pcl->x, it_pcl->y, it_pcl->z);                                     // doc: 点所在时刻的位置(雷达坐标系下)
-      V3D T_ei(pos_imu + vel_imu * dt + 0.5 * acc_imu * dt * dt - imu_state.pos);   // doc: 从点所在的世界位置-雷达末尾世界位置
+      V3D T_ei(pos_imu + vel_imu * dt + 0.5 * acc_imu * dt * dt - imu_state.pos);   // doc: 从点所在的世界位置 - 雷达末尾世界位置
       // doc: .conjugate()取旋转矩阵的共轭,rot.conjugate（）是四元数共轭，即旋转求逆
       // doc: imu_state.offset_R_L_I是从雷达到惯性的旋转矩阵 简单记为I^R_L
       // doc: imu_state.offset_T_L_I是惯性系下雷达坐标系原点的位置简单记为I^t_L

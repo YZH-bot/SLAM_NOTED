@@ -46,7 +46,7 @@ int FeatureManager::getFeatureCount()
 /**
  * @brief   把特征点放入feature的list容器中，计算每一个点跟踪次数和它在次新帧和次次新帧间的视差，返回是否是关键帧
  * @param[in]   frame_count 窗口内帧的个数
- * @param[in]   image 某帧所有特征点的[camera_id,[x,y,z,u,v,vx,vy]]s构成的map,索引为feature_id
+ * @param[in]   image 某帧所有特征点的{feature_id: [camera_id,[x,y,z,u,v,vx,vy]]}s构成的map,索引为feature_id
  * @param[in]   td IMU和cam同步时间差
  * @return  bool true：次新帧是关键帧;false：非关键帧
 */
@@ -61,6 +61,7 @@ bool FeatureManager::addFeatureCheckParallax(int frame_count, const map<int, vec
     // doc: 把image map中的所有特征点放入feature list容器中
     for (auto &id_pts : image)
     {
+        // doc: 存储了某一特征点在某一帧的特征信息 [x,y,z,u,v,vx,vy]
         FeaturePerFrame f_per_fra(id_pts.second[0].second, td);
 
         // doc: 迭代器寻找feature list中是否有这feature_id
@@ -73,7 +74,9 @@ bool FeatureManager::addFeatureCheckParallax(int frame_count, const map<int, vec
         // doc: 如果没有则新建一个，并添加这图像帧
         if (it == feature.end())
         {
-            feature.push_back(FeaturePerId(feature_id, frame_count));
+            // ?: frame_count是关键帧数量, 这里为什么要用frame_count作为参数？
+            // doc: 解释: 因为这个 feature 可能被erase掉了, 所以当前关键帧数就是重新第一次观测到它的帧
+            feature.push_back(FeaturePerId(feature_id, frame_count));   
             feature.back().feature_per_frame.push_back(f_per_fra);
         }
         // doc: 有的话把图像帧添加进去
@@ -138,7 +141,9 @@ void FeatureManager::debugShow()
     }
 }
 
-//得到frame_count_l与frame_count_r两帧之间的对应特征点
+// doc: 得到frame_count_l与frame_count_r两帧之间的对应特征点
+// ?: 会不会出现虽然满足 it.start_frame <= frame_count_l && it.endFrame() >= frame_count_r, 但是frame_count_l,r并没有观察到该点的情况？
+// doc: 应该不会, 因为 endFrame 已经表示包含
 vector<pair<Vector3d, Vector3d>> FeatureManager::getCorresponding(int frame_count_l, int frame_count_r)
 {
     vector<pair<Vector3d, Vector3d>> corres;
@@ -224,13 +229,19 @@ VectorXd FeatureManager::getDepthVector()
     return dep_vec;
 }
 
-//对特征点进行三角化求深度（SVD分解）
+// doc: 对特征点进行三角化求深度（SVD分解）
+/**
+ * @param[in] Ps: 图像的位姿
+ * @param[in] tic: 外参
+ * @param[in] ric: 外参
+*/
+// doc: https://blog.csdn.net/Walking_roll/article/details/119984469
 void FeatureManager::triangulate(Vector3d Ps[], Vector3d tic[], Matrix3d ric[])
 {
     for (auto &it_per_id : feature)
     {
-        it_per_id.used_num = it_per_id.feature_per_frame.size();
-        if (!(it_per_id.used_num >= 2 && it_per_id.start_frame < WINDOW_SIZE - 2))
+        it_per_id.used_num = it_per_id.feature_per_frame.size();    // doc：该特征点总共被多少个图像观测到
+        if (!(it_per_id.used_num >= 2 && it_per_id.start_frame < WINDOW_SIZE - 2))  // doc：小于2帧或者起始帧比较新则跳过
             continue;
 
         if (it_per_id.estimated_depth > 0)
@@ -251,7 +262,7 @@ void FeatureManager::triangulate(Vector3d Ps[], Vector3d tic[], Matrix3d ric[])
         for (auto &it_per_frame : it_per_id.feature_per_frame)
         {
             imu_j++;
-            //R t为第j帧相机坐标系到第i帧相机坐标系的变换矩阵，P为i到j的变换矩阵
+            // doc：R t为第j帧相机坐标系到第i帧相机坐标系的变换矩阵，P为i到j的变换矩阵
             Eigen::Vector3d t1 = Ps[imu_j] + Rs[imu_j] * tic[0];
             Eigen::Matrix3d R1 = Rs[imu_j] * ric[0];
             Eigen::Vector3d t = R0.transpose() * (t1 - t0);
@@ -270,10 +281,10 @@ void FeatureManager::triangulate(Vector3d Ps[], Vector3d tic[], Matrix3d ric[])
             if (imu_i == imu_j)
                 continue;
         }
-        //对A的SVD分解得到其最小奇异值对应的单位奇异向量(x,y,z,w)，深度为z/w
+        // doc: 对A的SVD分解得到其最小奇异值对应的单位奇异向量(x,y,z,w)，深度为z/w
         ROS_ASSERT(svd_idx == svd_A.rows());
         Eigen::Vector4d svd_V = Eigen::JacobiSVD<Eigen::MatrixXd>(svd_A, Eigen::ComputeThinV).matrixV().rightCols<1>();
-        double svd_method = svd_V[2] / svd_V[3];
+        double svd_method = svd_V[2] / svd_V[3];    // doc: 深度
         //it_per_id->estimated_depth = -b / A;
         //it_per_id->estimated_depth = svd_V[2] / svd_V[3];
 
