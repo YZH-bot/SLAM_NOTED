@@ -224,7 +224,8 @@ bool Projector::projectUndistortedPoint(const LidarFrame& frame,const V3D& p_L_k
     int col = uv_k(0);
 
     int idx = vectorIndexFromRowCol(row, col);
-    // Look up the index of the undistortion transformation that belongs to this pixel
+    // doc: Look up the index of the undistortion transformation that belongs to this pixel
+    // doc: 这里找不到就从上面开始向下遍历，虽然我觉得这样不妥，但是后面有检查是否距离阈值，太大还是会拒绝掉
     if (frame.proj_idx[idx] == 0) {
         row = 0;
         while (row < frame.img_intensity.rows) {
@@ -245,7 +246,7 @@ bool Projector::projectUndistortedPoint(const LidarFrame& frame,const V3D& p_L_k
     if(frame.proj_idx[idx] > 1) {
         float min_dist = std::numeric_limits<float>::max();
         for (int i = 1; i <= frame.proj_idx[idx]; i++) {
-            const int j = frame.proj_idx[idx + i];
+            const int j = frame.proj_idx[idx + i];    // doc: 获得了 去畸变 之后的点的索引
             const V3D p_cand = frame.points_corrected->points[j].getVector3fMap().cast<double>();
             const V3D diff = p_L_k - p_cand;
             const float dist = diff.norm();
@@ -263,13 +264,14 @@ bool Projector::projectUndistortedPoint(const LidarFrame& frame,const V3D& p_L_k
     }
 
     // Lookup the inverse (T_Li_Lk) of the undistortion transformation (T_Lk_Li)
-    const M4D& T_Li_Lk = frame.T_Li_Lk_vec[frame.vec_idx[distortion_idx]];
+    const M4D& T_Li_Lk = frame.T_Li_Lk_vec[frame.vec_idx[distortion_idx]];    // doc：根据去畸变的点的索引，找到对应的T_Li_Lk
 
     // Express what the feature point would have been expressed in the lidar frame at the time of the 
     // respective point, basically "distort" the point to distorted lidar frame
-    p_L_i = T_Li_Lk.block<3,3>(0,0) * p_L_k + T_Li_Lk.block<3,1>(0,3);
+    p_L_i = T_Li_Lk.block<3,3>(0,0) * p_L_k + T_Li_Lk.block<3,1>(0,3);     // doc：得到去畸变之前的点
 
     // doc: Now we can project this point to the actual dense image (which is recorded in the distorted frame)
+    // doc: 现在可以将这个点投影到当前的稠密图像上
     if (!projectPoint(p_L_i, uv)) {
         return false;
     }
