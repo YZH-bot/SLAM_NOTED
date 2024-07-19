@@ -286,11 +286,12 @@ void ImuProcess::UndistortPcl(const MeasureGroup &meas, esekfom::esekf<state_ikf
     for (int p_idx : timestamp_map[timestamps[idx]]) {
       V3D P_i = pcl_out.points[p_idx].getVector3fMap().cast<double>();
       V3D P_k = (vec_T_Lk_Li[idx].block<3,3>(0,0) * P_i) + vec_T_Lk_Li[idx].block<3,1>(0,3);
-
+      // doc：去畸变的点按照时间戳排序，因为 idx 是按照时间戳排序的，这里的 p_idx 是对应时间戳的未去畸变前点的索引（同一时间的点有可能有多个）
+      // doc：但是，去畸变和未去畸变的点云的索引是一样的
       pcl_out.points[p_idx].x = P_k(0);
       pcl_out.points[p_idx].y = P_k(1);
       pcl_out.points[p_idx].z = P_k(2);
-      vec_idx[p_idx] = idx;                   // doc：记录每个点时间戳对应的索引
+      vec_idx[p_idx] = idx;    // doc：这个 vec_idx 使得可以按照点云索引来找到对应的时间戳，找到之后可以反投影到畸变前的点，然后投影得到像素坐标，可以计算残差                   // doc：记录每个点时间戳对应的索引
     }
   }
 }
