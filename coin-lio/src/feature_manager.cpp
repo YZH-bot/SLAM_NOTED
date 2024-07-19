@@ -404,7 +404,7 @@ void FeatureManager::trackFeatures(const LidarFrame& frame, const M4D& T_GL) {
             // doc：Transform to lidar frame at end of frame
             const V3D p_feat_Lk = R_LG * p_feat_G + p_LG;
 
-            V3D p_feat_Li;
+            V3D p_feat_Li;    // doc: 上一帧的点逆畸变之后的坐标
             V2D uv_i;
             int distortion_idx;
             // doc：投影的到像素坐标uv_i和未矫正前的点坐标p_feat_Li
