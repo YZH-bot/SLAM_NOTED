@@ -1817,11 +1817,13 @@ public:
 				cov P_inv = P_temp.inverse();
 				//std::cout << "line 1781" << std::endl;
 				// doc： dyn_share.h 是点面观测残差
+				// doc: 下面的前半部分其实就是卡尔曼增益 K = P_inv. template block<n, 12>(0, 0) * h_x_.transpose() = (H^T * R^{−1} * H + P^{−1})^{−1} * H^T * R^{−1} ------ 公式. 20
 				K_h = P_inv. template block<n, 12>(0, 0) * h_x_.transpose() * dyn_share.h;
 				//std::cout << "line 1780" << std::endl;
 				//cov HTH_cur = cov::Zero();
 				//HTH_cur. template block<12, 12>(0, 0) = HTH;
 				K_x.setZero(); // = cov::Zero();
+				// doc: K_x = K * H, 
 				K_x. template block<n, 12>(0, 0) = P_inv. template block<n, 12>(0, 0) * HTH;
 				//K_= (h_x_.transpose() * h_x_ + (P_/R).inverse()).inverse()*h_x_.transpose();
 			#endif 
@@ -1829,6 +1831,7 @@ public:
 
 			//doc: 得到error state的最优估计​
 			//K_x = K_ * h_x_;
+			// doc: 这里 K_h 文中多了一个负号，需要自己琢磨一下正负区别
 			Matrix<scalar_type, n, 1> dx_ = K_h + (K_x - Matrix<scalar_type, n, n>::Identity()) * dx_new; 
 			// std::cout << dx_.rows() << std::endl;
 			state x_before = x_;
