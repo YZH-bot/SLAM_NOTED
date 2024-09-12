@@ -1628,7 +1628,7 @@ public:
 		cov P_propagated = P_;
 		int dof_Measurement; 
 		
-		// ?
+		// doc: n 为 state 的维度，即 state 的总自由度
 		Matrix<scalar_type, n, 1> K_h;
 		Matrix<scalar_type, n, n> K_x; 
 		
@@ -1660,8 +1660,8 @@ public:
 			dx_new = dx;							// doc: 用于迭代的误差状态
 			
 			
-			// 预测得到的误差状态协方差矩阵
-			// 协方差矩阵在迭代过程中不会代入下一次迭代，直到最后一次退出时更新，在迭代过程中更新的只是先验
+			// doc: 预测得到的误差状态协方差矩阵
+			// doc: 协方差矩阵在迭代过程中不会代入下一次迭代，直到最后一次退出时更新，在迭代过程中更新的只是 state
 			P_ = P_propagated;
 			
 			// doc: 这一大段都在求协方差的先验更新，大致上是P=(J^-1)*P*(J^-T)如论文式16~18
