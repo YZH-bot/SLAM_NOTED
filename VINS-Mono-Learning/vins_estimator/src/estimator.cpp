@@ -326,7 +326,7 @@ bool Estimator::initialStructure()
         {
             imu_j++;
             Vector3d pts_j = it_per_frame.point;
-            tmp_feature.observation.push_back(make_pair(imu_j, Eigen::Vector2d{pts_j.x(), pts_j.y()}));
+            tmp_feature.observation.push_back(make_pair(imu_j, Eigen::Vector2d{pts_j.x(), pts_j.y()})); // doc: 该特征点在所有观测到的图像中的 pixel 坐标
         }
         sfm_f.push_back(tmp_feature);
     }
