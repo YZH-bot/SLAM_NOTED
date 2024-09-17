@@ -799,9 +799,9 @@ public:
         sig_buffer.notify_all();
     }
 
-    // lidar数据与imu数据同步
-    //; 实际操作很简单，就是取出最前面的lidar数据，然后把这段时间内的对应的imu数据也取出来。
-    //; 都取出来之后，把lidar和imu都从他们的buff中删除
+    // doc: lidar数据与imu数据同步
+    // doc: 实际操作很简单，就是取出最前面的lidar数据，然后把这段时间内的对应的imu数据也取出来。
+    // doc: 都取出来之后，把lidar和imu都从他们的buff中删除
     bool sync_packages(MeasureGroup &meas)
     {
         if (lidar_buffer.empty() || imu_buffer.empty())
@@ -896,7 +896,7 @@ public:
         downSizeFilterMap.setLeafSize(filter_size_map_min, filter_size_map_min, filter_size_map_min);
 
         printf_line;
-        //; 重点：开启Fast-lio线程
+        // info: 重点：开启Fast-lio线程
         m_thread_process = std::thread(&Fast_lio::process, this);
         printf_line;
     }
@@ -969,13 +969,12 @@ public:
             if (flg_exit)
                 break;
 
-            //; 先进行一次回调，处理发来的lidar数据
-            //! 学习：这种写法还是要学习一下，在一个新的线程中，需要处理ros消息回调函数，这里要spinOnce
+            // doc: 先进行一次回调，处理发来的lidar数据
             ros::spinOnce();
 
-            //??? 无缘无故在这睡1ms干啥？
+            // ??? 无缘无故在这睡1ms干啥？
             std::this_thread::sleep_for(std::chrono::milliseconds(1));
-            //; 一直等待，直到可以处理lidar数据
+            // doc: 一直等待，直到可以处理lidar数据
             while (g_camera_lidar_queue.if_lidar_can_process() == false)
             {
                 std::this_thread::sleep_for(std::chrono::milliseconds(1));
@@ -1020,6 +1019,9 @@ public:
                     }
 
                     lidar_can_update = 0;  //; 这帧lidar
+                    //continue; 
+                    // doc: 按理这里 continue 不应该注释掉的，如果lidar的时间戳早于 last_update_time，意味着这帧lidar数据是老数据，不应该处理。
+                    // doc: 因为提取的 imu 数据只是在当前lidar帧时间戳之前的数据，然后从 last_update_time 时刻的 g_lio_state 进行积分，明显是不对的。
                 }
                 else
                 {

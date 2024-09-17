@@ -122,19 +122,20 @@ std::vector<std::pair<std::vector<sensor_msgs::ImuConstPtr>, sensor_msgs::PointC
 {
     std::vector<std::pair<std::vector<sensor_msgs::ImuConstPtr>, sensor_msgs::PointCloudConstPtr>> measurements;
     std::unique_lock<std::mutex> lk(m_buf);
+    // doc: 这里会一次性把满足条件的 imu 和 feature 数据都取出来，并进行对齐
     while (true)
     {
         if (imu_buf.empty() || feature_buf.empty())
             return measurements;
 
-        // 对齐标准：IMU最后一个数据的时间要大于第一个图像特征数据的时间
+        // doc: 对齐标准：IMU最后一个数据的时间要大于第一个图像特征数据的时间
         if (!(imu_buf.back()->header.stamp.toSec() > feature_buf.front()->header.stamp.toSec() + estimator.td))
         {
             sum_of_wait++;
             return measurements;
         }
 
-        // 对齐标准：IMU第一个数据的时间要小于第一个图像特征数据的时间
+        // doc: 对齐标准：IMU第一个数据的时间要小于第一个图像特征数据的时间
         if (!(imu_buf.front()->header.stamp.toSec() < feature_buf.front()->header.stamp.toSec() + estimator.td))
         {
             ROS_WARN("throw img, only should happen at the beginning [%.5f | %.5f] ", imu_buf.front()->header.stamp.toSec(), feature_buf.front()->header.stamp.toSec());
@@ -484,6 +485,7 @@ void process()
     std_msgs::Header header;
     //?-------- 增加结束 ----------
 
+    // ???: 弄清楚 last_update_time 的时间前后顺序
     while (true)
     {
         std::vector<std::pair<std::vector<sensor_msgs::ImuConstPtr>, sensor_msgs::PointCloudConstPtr>> measurements;
@@ -493,12 +495,13 @@ void process()
             continue;
         }
 
+        // 这个锁只会在重启 reset 的时候用到
         m_estimator.lock();
-        //; 每次循环都会给设置一个负无穷大的数
+        // doc: 每次循环都会给设置一个负无穷大的数
         g_camera_lidar_queue.m_last_visual_time = -3e8;
 
         TicToc t_s;
-        //; 遍历测量到的所有camera和imu数据
+        // doc: 遍历测量到的所有camera和imu数据
         for (auto &measurement : measurements)
         {
             // 对应这段的img data
@@ -506,19 +509,19 @@ void process()
 
             //?-------- 增加开始 ----------
             int if_camera_can_update = 1;
-            //; cam_update_tim ：当前帧的图像时间
-            double cam_update_tim = img_msg->header.stamp.toSec() + estimator.td;
+            // doc: cam_update_tim ：当前帧的图像时间
+            double cam_update_tim = img_msg->header.stamp.toSec() + estimator.td;   // doc: td 是相机和lidar的时间 offset
             
-            // ANCHOR - determine if update of not.
-            //; 此时已经开始了LIO线程，所以这个一定成立
+            // doc: 此时已经开始了LIO线程，所以这个一定成立
             if (estimator.m_fast_lio_instance != nullptr)
             {
                 g_camera_lidar_queue.m_camera_imu_td = estimator.td;
 
-                //; 更新最新的图片时间
+                // doc: 更新最新的图片时间, 用于 if_camera_can_process 中判断和lidar时间戳的先后关系, 判断是否需要阻塞去执行 fast-lio
                 g_camera_lidar_queue.m_last_visual_time = img_msg->header.stamp.toSec();
                 
-                //; 判断是否能够处理这一帧的camera数据，跟lidar的判断是一样的
+                // doc: 判断是否能够处理这一帧的camera数据，跟lidar的判断是一样的
+                // doc: 要求是: camera的时间戳要比上次更新的lidar时间戳要新, 不然后面imu积分肯定不对
                 while (g_camera_lidar_queue.if_camera_can_process() == false)
                 {
                     std::this_thread::sleep_for(std::chrono::milliseconds(1));
@@ -538,6 +541,7 @@ void process()
             {
                 m_state.lock();
                 //! 同步lio状态到vio状态! 注意里面没有同步P和Q
+                // ???: 为什么
                 sync_lio_to_vio(estimator);
                 m_state.unlock();
             }
@@ -629,12 +633,12 @@ void process()
             std::deque<sensor_msgs::Imu::ConstPtr> imu_queue;
             int total_IMU_cnt = 0;
             int acc_IMU_cnt = 0;
-            //; 下面就是在统计这些imu数据中在上次lio状态更新时刻之后的那些imu数据
+            // doc: 下面就是在统计这些imu数据中在上次lio状态更新时刻之后的那些imu数据
             for (auto &imu_msg : measurement.first)
             {
                 total_IMU_cnt++;
-                //; 如果这帧IMU数据在上次状态更新之后
-                //! g_lio_state.last_update_time : 在lio中对应lidar点云的最后一个点的时间， 在vio中对应图像的时间
+                // doc: 如果这帧IMU数据在上次状态更新之后
+                // doc: g_lio_state.last_update_time : 在lio中对应lidar点云的最后一个点的时间， 在vio中对应图像的时间
                 if (imu_msg->header.stamp.toSec() > g_lio_state.last_update_time)
                 {
                     acc_IMU_cnt++;
@@ -645,6 +649,8 @@ void process()
 
 
             int esikf_update_valid = false;
+            // doc: 如果这里的 size() 为0表示什么呢?
+            // doc: 这意味着这帧图像的imu数据都在上次状态更新之前, 这意味着图像延迟了, img.time < last_update_time, 应该跳过或者做额外处理
             if (imu_queue.size())
             {
                 //; 正常情况下这个条件不会满足
@@ -874,14 +880,15 @@ void process()
             }
 
             // Update state with pose graph optimization
-            //! 服了，滤波滤了半天，这里又改成IMU的预测状态了！
-            //! 确实有这个问题，看github上的issue ：https://github.com/hku-mars/r2live/issues/30
+            // doc: 上面滤波滤了半天，这里又改成IMU的预测状态了！这意味着ESIKF的视觉观测没用到！
+            // doc: 确实有这个问题，看github上的issue ：https://github.com/hku-mars/r2live/issues/30
             //; vio初始化之后的10s时间内，g_lio_state都是由imu积分得到的预测状态
             g_lio_state = state_before_esikf;  
 
             t_s.tic();
             //; 这里又调用VINS的后端进行优化，但是作者自己写的LM算法进行后端优化，没有使用ceres的库
             //; 这个函数里面就是作者把原来vins的processImage函数中的绝大多数操作又拿来了！然后后端自己写了LM算法，没用ceres
+            // info: 重要: 这个函数里面做了初始化
             estimator.solve_image_pose(img_msg->header);
 
             //! 没看懂在干什么
@@ -1067,7 +1074,7 @@ int main(int argc, char **argv)
     //; 看这个消息是干嘛的？好像根本没有这个话题，应该是从vins里复制来忘了删
     ros::Subscriber sub_relo_points = nh.subscribe("/pose_graph/match_points", 20000, relocalization_callback, ros::TransportHints().tcpNoDelay());
 
-    // 创建VIO主线程
+    // info: 创建VIO主线程
     std::thread measurement_process{process};
     ros::spin();
 

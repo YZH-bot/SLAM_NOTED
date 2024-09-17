@@ -350,8 +350,7 @@ StatesGroup ImuProcess::imu_preintegration(const StatesGroup &state_in,
     angvel_avr -= state_inout.bias_g;
     acc_avr = acc_avr - state_inout.bias_a;
 
-    //! 非常非常重要：状态就是在这里同步的！上次vio的状态更新到了lio上，所以这次lio状态传播的时候，在last_update_time
-    //!  之前的IMU数据就不能用了
+    // doc: 非常非常重要：状态就是在这里同步的！上次vio的状态更新到了lio上，所以这次lio状态传播的时候，在last_update_time 之前的IMU数据就不能用了
     if (tail->header.stamp.toSec() < state_inout.last_update_time)
     {
       continue;

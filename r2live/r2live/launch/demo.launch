@@ -3,6 +3,7 @@
     <arg name="config_path" default = "$(find r2live)/../config/filr_cam.yaml" />
 	  <arg name="vins_path" default = "$(find r2live)/../config/../" />
     <rosparam command="load" file="$(find r2live)/../config/lio_config.yaml" />
+    <!-- info: 1. 前端 node -->
     <node name="feature_tracker" pkg="feature_tracker" type="feature_tracker" output="log">
         <param name="config_file" type="string" value="$(arg config_path)" />
         <param name="vins_folder" type="string" value="$(arg vins_path)" />
@@ -18,8 +19,10 @@
     
     <param name="if_lidar_start_first" type="int" value="0" />  <!-- 这个变量什么意思？ -->
 
+    <!-- info: 2. lidar 前端特征提取 node -->
     <node pkg="r2live" type="lio_feat_extract" name="lio_feat_extract"  output="log"/>
 
+    <!-- info: 3. 主线程 node: 包括 lio 和 vio -->
     <group if="1">
         <node name="r2live" pkg="r2live" type="r2live" output="screen">
                 <param name="config_file" type="string" value="$(arg config_path)" />

@@ -233,8 +233,8 @@ struct Camera_Lidar_queue
     bool if_camera_can_process()
     {
         m_if_have_camera_data = 1;   //; 调用这个函数的时候一定已经有图片进来了，所以这里直接赋值1
-        double cam_last_time = get_camera_front_time();   //; 最老的image时间  
-        double lidar_last_time = get_lidar_front_time();  //; 最老的lidar时间
+        double cam_last_time = get_camera_front_time();   // doc: 最老的image时间  
+        double lidar_last_time = get_lidar_front_time();  // doc: lidar队列中最老的lidar时间戳
         if (m_if_have_lidar_data != 1)
         {
             return true;
@@ -268,19 +268,19 @@ struct Camera_Lidar_queue
         double cam_last_time = get_camera_front_time();   
         double lidar_last_time = get_lidar_front_time();
         
-        //; 没有相机数据，那肯定可以处理lidar数据
+        // doc: 没有相机数据，那肯定可以处理lidar数据
         if (m_if_have_camera_data == 0)
         {
             return true;
         }
 
-        //; 相机或者lidar时间戳有问题
+        // doc: 相机或者lidar时间戳有问题
         if (cam_last_time < 0 || lidar_last_time < 0)
         {
             return false;
         }
 
-        //; 最老的lidar时间比最老的camera时间晚，那么要先处理camera数据
+        // doc: 最老的lidar时间比最老的camera时间晚，那么要先处理camera数据
         //; *代表camera，&代表lidar，代表如下：
         //;   ********
         //;      &&&&&&
