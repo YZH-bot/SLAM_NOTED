@@ -598,7 +598,7 @@ Eigen::Matrix<double, -1, 1> solve_LM(
 }
 
 
-//; 作者自己写的后端优化函数，没有调用ceres的库
+// doc: 作者自己写的后端优化函数，没有调用ceres的库
 void Estimator::optimization_LM()
 {
     vector2double();

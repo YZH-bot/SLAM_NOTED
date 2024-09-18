@@ -5,7 +5,7 @@ int FeaturePerId::endFrame()
     return start_frame + feature_per_frame.size() - 1;
 }
 
-FeatureManager::FeatureManager(Matrix3d _Rs[])
+FeatureManager::FeatureManager(Matrix3d _Rs[])  // doc: Rs就是滑窗中的相机旋转矩阵数组
     : Rs(_Rs)
 {
     for (int i = 0; i < NUM_OF_CAM; i++)
@@ -216,15 +216,17 @@ VectorXd FeatureManager::getDepthVector()
     return dep_vec;
 }
 
-// 对特征点进行三角化求深度（SVD分解）
+// doc: 对特征点进行三角化求深度（SVD分解）
 void FeatureManager::triangulate(Vector3d Ps[], Vector3d tic[], Matrix3d ric[])
 {
     for (auto &it_per_id : feature)
     {
         it_per_id.used_num = it_per_id.feature_per_frame.size();
+        // doc: 如果观测到的帧数小于2，或者观测到的两帧都属于比较新的帧，则跳过
         if (!(it_per_id.used_num >= 2 && it_per_id.start_frame < WINDOW_SIZE - 2))
             continue;
 
+        // doc: 意味着已经有了深度值，则跳过
         if (it_per_id.estimated_depth > 0)
             continue;
 
@@ -234,7 +236,7 @@ void FeatureManager::triangulate(Vector3d Ps[], Vector3d tic[], Matrix3d ric[])
         Eigen::MatrixXd svd_A(2 * it_per_id.feature_per_frame.size(), 4);
         int svd_idx = 0;
 
-        // R0 t0为第i帧相机坐标系到世界坐标系的变换矩阵
+        // doc: R0 t0为第i帧相机坐标系到世界坐标系的变换矩阵
         Eigen::Matrix<double, 3, 4> P0;
         Eigen::Vector3d t0 = Ps[imu_i] + Rs[imu_i] * tic[0];
         Eigen::Matrix3d R0 = Rs[imu_i] * ric[0];
@@ -243,7 +245,7 @@ void FeatureManager::triangulate(Vector3d Ps[], Vector3d tic[], Matrix3d ric[])
 
         for (auto &it_per_frame : it_per_id.feature_per_frame)
         {
-            imu_j++;
+            imu_j++;    // ???: 这里这样直接+1, 意味着后续的所有帧都是相邻帧？
 
             // R t为第j帧相机坐标系到第i帧相机坐标系的变换矩阵，P为i到j的变换矩阵
             Eigen::Vector3d t1 = Ps[imu_j] + Rs[imu_j] * tic[0];

@@ -163,7 +163,7 @@ void Estimator::processIMU(double dt, const Vector3d &linear_acceleration, const
 //; 这个是原先VINS中最重要的处理图片的函数，里面实现后端优化、滑窗等操作，这里单独摘出来了
 void Estimator::solve_image_pose(const std_msgs::Header &header)
 {
-    // Step 1： 外参初始化，也就是在线标定IMU和camera之间的外参
+    // doc: Step 1： 外参初始化，也就是在线标定IMU和camera之间的外参
     if (ESTIMATE_EXTRINSIC == 2)
     {
         ROS_INFO("calibrating extrinsic param, rotation movement is needed");
@@ -183,7 +183,7 @@ void Estimator::solve_image_pose(const std_msgs::Header &header)
         }
     }
 
-    // Step 2 : 下面根据solver_flag来判断是进行初始化还是进行非线性优化
+    // doc: Step 2 : 下面根据solver_flag来判断是进行初始化还是进行非线性优化
     if (solver_flag == INITIAL)
     {
         if (frame_count == WINDOW_SIZE)
@@ -224,12 +224,12 @@ void Estimator::solve_image_pose(const std_msgs::Header &header)
             frame_count++;
     }
 
-    //; 进行初始化之后，后面都会进入else这个分支
+    // doc: 进行初始化之后，后面都会进入else这个分支
     else
     {
         TicToc t_solve;
-        // Step 1 后端非线性优化，边缘化
-        //! 注意这里面的后端优化是作者自己写的LM算法，没有调用ceres的库，所以这个地方还是和vins不同的
+        // doc: Step 1 后端非线性优化，边缘化
+        // doc: 注意这里面的后端优化是作者自己写的LM算法，没有调用ceres的库，所以这个地方还是和vins不同的
         solveOdometry();   
 
 
@@ -648,21 +648,21 @@ bool Estimator::relativePose(Matrix3d &relative_R, Vector3d &relative_T, int &l)
     return false;
 }
 
-// 三角化求解所有特征点的深度，并进行非线性优化
+// doc: 三角化求解所有特征点的深度，并进行非线性优化
 void Estimator::solveOdometry()
 {
+    // doc: 窗口内的图像帧数小于窗口大小，则不进行优化
     if (frame_count < WINDOW_SIZE)
         return;
 
-    if (solver_flag == NON_LINEAR)
+    if (solver_flag == NON_LINEAR)  // doc: 初始化成功
     {
         TicToc t_tri;
         f_manager.triangulate(Ps, tic, ric);
         ROS_DEBUG("triangulation costs %f", t_tri.toc());
 
-        // ANCHOR - using optimization
-        //; 注意：这里和原来vins中的不同，原来VINS中的处理很复杂，这里自己用了自己写的函数
-        //; 主要是手动构造大的残差和雅克比矩阵，然后利用LM方法求解
+        // doc: 注意：这里和原来vins中的不同，原来VINS中的处理很复杂，这里自己用了自己写的函数
+        // doc:主要是手动构造大的残差和雅克比矩阵，然后利用LM方法求解
         optimization_LM();
     } 
 }
