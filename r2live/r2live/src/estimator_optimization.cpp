@@ -619,14 +619,14 @@ void Estimator::optimization_LM()
     g_loss_function = new ceres::HuberLoss(0.5);
     TicToc t_whole, t_prepare, t_solver;
 
-    // Step 1 : 添加约束
-    // Step 1.0 : 上次边缘化得到的先验约束
+    // doc: Step 1 : 添加约束
+    // doc: Step 1.0 : 上次边缘化得到的先验约束
     if (m_vio_margin_ptr)
     {
         margin_factor.m_vio_margin_ptr = m_vio_margin_ptr;
     }
 
-    // Step 1.1 : 遍历所有图像帧，添加帧与帧之间的imu预积分约束
+    // doc: Step 1.1 : 遍历所有图像帧，添加帧与帧之间的imu预积分约束
     for (int i = 0; i < WINDOW_SIZE; i++)
     {
         int j = i + 1;
@@ -635,14 +635,14 @@ void Estimator::optimization_LM()
 
         IMUFactor *imu_factor = new IMUFactor(pre_integrations[j]);
 
-        //; 下面如果使用ceres，直接调用AddResidualBlock即可。这里是自己写的
+        // doc: 下面如果使用ceres，直接调用AddResidualBlock即可。这里是自己写的
         IMU_factor_res imu_factor_res;
         imu_factor_res.add_keyframe_to_keyframe_factor(this, imu_factor, i, j);
         imu_factor_res_vec.push_back(imu_factor_res);
     }
 
-    // Step 1.2 : 遍历所有关键帧，添加LIO先验约束
-    //! bug? lidar先验因子可能是没有的？--> 在lidar没有出问题的情况下数据一般都是连续的，所以lidar先验因子一般都是有的
+    // doc: Step 1.2 : 遍历所有关键帧，添加LIO先验约束
+    // doc: bug? lidar先验因子可能是没有的？--> 在lidar没有出问题的情况下数据一般都是连续的，所以lidar先验因子一般都是有的
     for (int i = 0; i <= WINDOW_SIZE; i++)
     {
         LiDAR_prior_factor_15 *lidar_prior_factor = new LiDAR_prior_factor_15(&m_lio_state_prediction_vec[i]);
@@ -654,7 +654,7 @@ void Estimator::optimization_LM()
     int f_m_cnt = 0;
     int feature_index = -1;
 
-    // Step 1.3 : 遍历所有图像特征点，添加图像特征点构成的约束
+    // doc: Step 1.3 : 遍历所有图像特征点，添加图像特征点构成的约束
     for (auto &it_per_id : f_manager.feature)
     {
         it_per_id.used_num = it_per_id.feature_per_frame.size();
@@ -690,7 +690,7 @@ void Estimator::optimization_LM()
     Eigen::SparseMatrix<double> residual_sparse, jacobian_sparse, hessian_sparse;
     LM_trust_region_strategy lm_trust_region;
 
-    // Step 2 进行迭代优化。配置文件中 NUM_ITERATIONS 写的是4次， g_extra_iterations会根据优化结果的不同设置成0或者1
+    // doc: Step 2 进行迭代优化。配置文件中 NUM_ITERATIONS 写的是4次， g_extra_iterations会根据优化结果的不同设置成0或者1
     for (int iter_count = 0; iter_count < NUM_ITERATIONS + g_extra_iterations; iter_count++)
     {
         t_build_cost += timer_tictoc.toc();
@@ -710,13 +710,12 @@ void Estimator::optimization_LM()
 
     double2vector();
     
-    //; 再计算一次残差和雅克比，为什么？
-    //! 解答：是为了后面进行滑窗边缘化，上面求解得到最后优化的状态之后，并没有计算最后优化后的状态的雅克比和残差，这里计算一下为了下面的滑窗边缘化准备
+    // ?: 再计算一次残差和雅克比，为什么？
+    // doc: 解答：是为了后面进行滑窗边缘化，上面求解得到最后优化的状态之后，并没有计算最后优化后的状态的雅克比和残差，这里计算一下为了下面的滑窗边缘化准备
     Evaluate(this, imu_factor_res_vec, projection_factor_res_vec, lidar_prior_factor_vec, margin_factor, feature_index,
              jacobian_sparse, residual_sparse, marginalization_flag);
 
-    // ANCHOR - VIO marginalization
-    //; 最后进行VIO的边缘化操作
+    // doc: 最后进行VIO的边缘化操作
     if (m_vio_margin_ptr)
     {
         delete m_vio_margin_ptr;

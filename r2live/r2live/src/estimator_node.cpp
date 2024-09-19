@@ -676,7 +676,7 @@ void process()
                     state_aft_integration = p_imu->imu_preintegration(g_lio_state, imu_queue, 0, cam_update_tim - imu_queue.back()->header.stamp.toSec());
                     
                     //; 滑窗中状态变量的先验值，注意是全局的位姿
-                    //! 重要：这个地方就是利用IMU积分的预测位姿，作为vio的滑窗里LiDAR的先验位姿，这个是在vio的因子图优化中使用的！
+                    // info: 重要：这个地方就是利用IMU积分的预测位姿，作为vio的滑窗里LiDAR的先验位姿，这个是在vio的因子图优化中使用的！
                     estimator.m_lio_state_prediction_vec[WINDOW_SIZE] = state_aft_integration;
                     
                     //; vins滑窗中的位姿和lio的全局位姿之间的差值？
