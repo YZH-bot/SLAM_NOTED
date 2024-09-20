@@ -203,7 +203,7 @@ void Estimator::solve_image_pose(const std_msgs::Header &header)
             if (result)
             {
                 solver_flag = NON_LINEAR;
-                // Step 4： 后端非线性优化，边缘化
+                // doc: Step 4： 后端非线性优化，边缘化
                 solveOdometry();
 
                 // Step 5： 滑动窗口，移除边缘化的帧

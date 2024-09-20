@@ -322,7 +322,7 @@ struct Marginalization_factor
         //; 关于时间延时的雅克比和状态的变化量
         diff_x(pos + 6, 0) = g_estimator->m_para_Td[0][0] - m_vio_margin_ptr->m_td;
         jacobian_matrix.block(0, (WINDOW_SIZE + 1) * 15, margin_residual_size, 7) = m_vio_margin_ptr->m_linearized_jacobians.block(0, pos, margin_residual_size, 7);
-        //; FEJ，更新残差，但是雅克比不更新
+        // !!!: FEJ，更新残差，但是雅克比不更新
         m_residual_new = m_vio_margin_ptr->m_linearized_residuals + (m_vio_margin_ptr->m_linearized_jacobians * diff_x);
         residual_vec.block(0, 0, margin_residual_size, 1) = m_residual_new;
         if (m_vio_margin_ptr->m_if_enable_debug == 1)
@@ -400,15 +400,15 @@ void update_delta_vector(Estimator *estimator, Eigen::Matrix<double, -1, 1> &del
     }
 }
 
-//; 这个Evaluate函数和ceres中手动定义残差和雅克比的函数类似，就是把IMU、LiDAR和Camera三种约束的残差
-//; 和雅克比都拿出来，放到最后总的大的残差和雅克比矩阵中
+// doc: 这个Evaluate函数和ceres中手动定义残差和雅克比的函数类似，就是把IMU、LiDAR和Camera三种约束的残差
+// doc: 和雅克比都拿出来，放到最后总的大的残差和雅克比矩阵中
 void Evaluate(Estimator *estimator, std::vector<IMU_factor_res> &imu_factor_res_vec,
               std::vector<Keypoint_projection_factor> &projection_factor_res_vec,
               std::vector<L_prior_factor> &lidar_prior_factor_vec,
               Marginalization_factor &margin_factor,
               const int &feature_residual_size,
-              Eigen::SparseMatrix<double> &jacobian_mat_sparse,
-              Eigen::SparseMatrix<double> &residual_sparse,
+              Eigen::SparseMatrix<double> &jacobian_mat_sparse,     // doc: output
+              Eigen::SparseMatrix<double> &residual_sparse,         // doc: output
               int marginalization_flag = -1) // Flag = 0, evaluate all, flag = 1, marginalize old, flag = 2, marginalize last.
 {
     int number_of_imu_res = imu_factor_res_vec.size();
@@ -446,7 +446,7 @@ void Evaluate(Estimator *estimator, std::vector<IMU_factor_res> &imu_factor_res_
     int jacobian_pos_col;
     int res_pos_ros = 0;
 
-    // Step 0 : VIO的边缘化约束
+    // doc: Step 0 : VIO的边缘化约束
     if (margin_factor.m_vio_margin_ptr != nullptr)
     {
         margin_factor.Evaluate_mine(residual, jacobian_mat);
@@ -740,8 +740,8 @@ void Estimator::optimization_LM()
     {
         int visual_size = jacobian_sparse.cols() - (15 * (WINDOW_SIZE + 1) + 6 + 1); // Extrinsic, Td
         hessian_sparse = jacobian_sparse.transpose() * jacobian_sparse;
-        //; 执行边缘化操作，得到边缘化约束的残差和雅克比
-        //;  这里传入的变量就是要进行舒尔补边缘化的方程 H * δx = b, 即J'*J * δx = -J'*e 
+        // doc: 执行边缘化操作，得到边缘化约束的残差和雅克比
+        // doc: 这里传入的变量就是要进行舒尔补边缘化的方程 H * δx = b, 即J'*J * δx = -J'*e 
         m_vio_margin_ptr->margin_oldest_frame(hessian_sparse.toDense(), (jacobian_sparse.transpose() * residual_sparse).toDense(), visual_size);
     }
     else if (marginalization_flag == MARGIN_SECOND_NEW)
