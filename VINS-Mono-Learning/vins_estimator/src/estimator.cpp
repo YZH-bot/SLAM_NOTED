@@ -1041,9 +1041,9 @@ void Estimator::optimization()
             if (pre_integrations[1]->sum_dt < 10.0)
             {
                 IMUFactor *imu_factor = new IMUFactor(pre_integrations[1]);
-                ResidualBlockInfo *residual_block_info = new ResidualBlockInfo(imu_factor, NULL,
-                                                                               vector<double *>{para_Pose[0], para_SpeedBias[0], para_Pose[1], para_SpeedBias[1]},
-                                                                               vector<int>{0, 1});
+                ResidualBlockInfo *residual_block_info = new ResidualBlockInfo(imu_factor, NULL,    // doc: imu 因子
+                                                                               vector<double *>{para_Pose[0], para_SpeedBias[0], para_Pose[1], para_SpeedBias[1]},  // doc: 相关优化变量
+                                                                               vector<int>{0, 1});  // doc: marg 掉 para_Pose[0], para_SpeedBias[0]
                 marginalization_info->addResidualBlockInfo(residual_block_info);
             }
         }
@@ -1077,9 +1077,9 @@ void Estimator::optimization()
                         ProjectionTdFactor *f_td = new ProjectionTdFactor(pts_i, pts_j, it_per_id.feature_per_frame[0].velocity, it_per_frame.velocity,
                                                                           it_per_id.feature_per_frame[0].cur_td, it_per_frame.cur_td,
                                                                           it_per_id.feature_per_frame[0].uv.y(), it_per_frame.uv.y());
-                        ResidualBlockInfo *residual_block_info = new ResidualBlockInfo(f_td, loss_function,
-                                                                                       vector<double *>{para_Pose[imu_i], para_Pose[imu_j], para_Ex_Pose[0], para_Feature[feature_index], para_Td[0]},
-                                                                                       vector<int>{0, 3});
+                        ResidualBlockInfo *residual_block_info = new ResidualBlockInfo(f_td, loss_function, // doc: 视觉因子
+                                                                                       vector<double *>{para_Pose[imu_i], para_Pose[imu_j], para_Ex_Pose[0], para_Feature[feature_index], para_Td[0]},  // doc: 相关优化变量
+                                                                                       vector<int>{0, 3});  // doc: marg 掉 para_Pose[imu_i], para_Feature[feature_index]
                         marginalization_info->addResidualBlockInfo(residual_block_info);
                     }
                     else
@@ -1096,7 +1096,7 @@ void Estimator::optimization()
 
         TicToc t_pre_margin;
 
-        // 4、计算每个残差，对应的Jacobian，并将各参数块拷贝到统一的内存（parameter_block_data）中
+        // doc: 4、计算每个残差，对应的Jacobian，并将各参数块拷贝到统一的内存（parameter_block_data）中
         // doc: 得到每次 IMU 和视觉观测(cost_function)对 应的参数块(parameter_blocks)，雅可比矩阵(jacobians)，残差值(residuals)
         marginalization_info->preMarginalize();
         ROS_DEBUG("pre marginalization %f ms", t_pre_margin.toc());
@@ -1128,16 +1128,17 @@ void Estimator::optimization()
         last_marginalization_parameter_blocks = parameter_blocks;
     }
 
-    // 如果次新帧不是关键帧：
+    // doc: 如果次新帧不是关键帧：
     else
     {
+        // doc: 上一次的边缘因子不为空，且包含了次新帧，否则不需要对边缘化因子作任何处理
         if (last_marginalization_info &&
             std::count(std::begin(last_marginalization_parameter_blocks), std::end(last_marginalization_parameter_blocks), para_Pose[WINDOW_SIZE - 1]))
         {
-            // 1.保留次新帧的IMU测量，丢弃该帧的视觉测量，将上一次先验残差项传递给marginalization_info
+            // doc: 1.保留次新帧的IMU测量，丢弃该帧的视觉测量，将上一次先验残差项传递给marginalization_info
             MarginalizationInfo *marginalization_info = new MarginalizationInfo();
             vector2double();
-            if (last_marginalization_info)
+            if (last_marginalization_info)  // doc: 这个条件多余了
             {
                 vector<int> drop_set;
                 for (int i = 0; i < static_cast<int>(last_marginalization_parameter_blocks.size()); i++)
@@ -1155,19 +1156,19 @@ void Estimator::optimization()
                 marginalization_info->addResidualBlockInfo(residual_block_info);
             }
 
-            // 2、premargin
+            // doc: 2、premargin: 计算每个残差，对应的Jacobian，并更新 parameter_block_data
             TicToc t_pre_margin;
             ROS_DEBUG("begin marginalization");
             marginalization_info->preMarginalize();
             ROS_DEBUG("end pre marginalization, %f ms", t_pre_margin.toc());
 
-            // 3、marginalize
+            // doc: 3、marginalize: 构造先验项舒尔补AX=b的结构，计算Jacobian和残差
             TicToc t_margin;
             ROS_DEBUG("begin marginalization");
             marginalization_info->marginalize();
             ROS_DEBUG("end marginalization, %f ms", t_margin.toc());
 
-            // 4.调整参数块在下一次窗口中对应的位置（去掉次新帧）
+            // doc: 4.调整参数块在下一次窗口中对应的位置（去掉次新帧）
             std::unordered_map<long, double *> addr_shift;
             for (int i = 0; i <= WINDOW_SIZE; i++)
             {
