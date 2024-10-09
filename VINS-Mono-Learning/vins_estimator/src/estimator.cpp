@@ -904,6 +904,7 @@ void Estimator::optimization()
 
         Vector3d pts_i = it_per_id.feature_per_frame[0].point;
 
+        // doc: 
         for (auto &it_per_frame : it_per_id.feature_per_frame)
         {
             imu_j++;
