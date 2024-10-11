@@ -86,35 +86,39 @@ MarginalizationInfo::~MarginalizationInfo()
     }
 }
 
-//添加残差块相关信息（优化变量，待边缘化变量）
+// doc: 添加残差块相关信息（优化变量，待边缘化变量）
 void MarginalizationInfo::addResidualBlockInfo(ResidualBlockInfo *residual_block_info)
 {
     factors.emplace_back(residual_block_info);
 
+    // doc: 获取参数块
     std::vector<double *> &parameter_blocks = residual_block_info->parameter_blocks;
+    // doc: 视觉 [7, 7, 7, 1]
     std::vector<int> parameter_block_sizes = residual_block_info->cost_function->parameter_block_sizes();
 
     for (int i = 0; i < static_cast<int>(residual_block_info->parameter_blocks.size()); i++)
     {
         double *addr = parameter_blocks[i];
         int size = parameter_block_sizes[i];
-        parameter_block_size[reinterpret_cast<long>(addr)] = size;
+        parameter_block_size[reinterpret_cast<long>(addr)] = size;  // doc: 每个优化变量的 Global 维度
     }
 
     for (int i = 0; i < static_cast<int>(residual_block_info->drop_set.size()); i++)
     {
         double *addr = parameter_blocks[residual_block_info->drop_set[i]];
-        parameter_block_idx[reinterpret_cast<long>(addr)] = 0;
+        parameter_block_idx[reinterpret_cast<long>(addr)] = 0;  // doc: 待边缘化变量
     }
 }
 
-//计算每个残差，对应的Jacobian，并更新parameter_block_data
+// doc: 计算每个因子对应的变量（parameter_blocks）、误差项（residuals）、Jacobian矩阵（jacobians），然后将变量放到 parameter_block_data 中
 void MarginalizationInfo::preMarginalize()
 {
     for (auto it : factors)
     {
+        // doc:计算残差项和Jacobian矩阵
         it->Evaluate();
 
+        // doc: 存储参数块 size = 例如，视觉 [7, 7, 7, 1] = 4
         std::vector<int> block_sizes = it->cost_function->parameter_block_sizes();
         for (int i = 0; i < static_cast<int>(block_sizes.size()); i++)
         {
@@ -124,7 +128,7 @@ void MarginalizationInfo::preMarginalize()
             {
                 double *data = new double[size];
                 memcpy(data, it->parameter_blocks[i], sizeof(double) * size);
-                parameter_block_data[addr] = data;
+                parameter_block_data[addr] = data;  // doc: 数据地址 -> 数据
             }
         }
     }
@@ -159,8 +163,10 @@ void* ThreadsConstructA(void* threadsstruct)
                 if (size_j == 7)
                     size_j = 6;
                 Eigen::MatrixXd jacobian_j = it->jacobians[j].leftCols(size_j);
+                // doc: 对角线元数
                 if (i == j)
                     p->A.block(idx_i, idx_j, size_i, size_j) += jacobian_i.transpose() * jacobian_j;
+                // doc: 非对角线元数
                 else
                 {
                     p->A.block(idx_i, idx_j, size_i, size_j) += jacobian_i.transpose() * jacobian_j;
@@ -173,9 +179,10 @@ void* ThreadsConstructA(void* threadsstruct)
     return threadsstruct;
 }
 
-//多线程构造先验项舒尔补AX=b的结构，计算Jacobian和残差
+// doc: 构建 Hessian 矩阵，Schur掉需要 marg 的变量，得到对剩余变量的约束，即为边缘化约束（先验约束）    多线程构造先验项舒尔补AX=b的结构，计算Jacobian和残差
 void MarginalizationInfo::marginalize()
 {
+    // doc: pos 为（Xm+Xb）localsize之和，即 Hesian 矩阵的维度
     int pos = 0;
     for (auto &it : parameter_block_idx)
     {
@@ -183,6 +190,7 @@ void MarginalizationInfo::marginalize()
         pos += localSize(parameter_block_size[it.first]);
     }
 
+    // doc: 需要边缘化的维度
     m = pos;
 
     for (const auto &it : parameter_block_size)
@@ -194,11 +202,13 @@ void MarginalizationInfo::marginalize()
         }
     }
 
+    // doc: 需要保留的维度
     n = pos - m;
 
     //ROS_DEBUG("marginalization, pos: %d, m: %d, n: %d, size: %d", pos, m, n, (int)parameter_block_idx.size());
 
     TicToc t_summing;
+    // doc: 原始 Heissen 矩阵
     Eigen::MatrixXd A(pos, pos);
     Eigen::VectorXd b(pos);
     A.setZero();
@@ -275,7 +285,7 @@ void MarginalizationInfo::marginalize()
     Eigen::MatrixXd Amm_inv = saes.eigenvectors() * Eigen::VectorXd((saes.eigenvalues().array() > eps).select(saes.eigenvalues().array().inverse(), 0)).asDiagonal() * saes.eigenvectors().transpose();
     //printf("error1: %f\n", (Amm * Amm_inv - Eigen::MatrixXd::Identity(m, m)).sum());
 
-    //舒尔补
+    // doc: 舒尔补
     Eigen::VectorXd bmm = b.segment(0, m);
     Eigen::MatrixXd Amr = A.block(0, m, m, n);
     Eigen::MatrixXd Arm = A.block(m, 0, n, m);

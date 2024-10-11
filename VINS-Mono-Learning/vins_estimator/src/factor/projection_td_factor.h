@@ -8,7 +8,8 @@
 #include "../parameters.h"
 
 //对imu-camera 时间戳不完全同步和 Rolling shutter 相机的支持
-// doc: <2, 7, 7, 7, 1, 1> = <误差项大小, 第一个优化变量大小, 第二个优化变量大小, 第三个优化变量大小, 第四个优化变量大小>
+// doc: <2, 7, 7, 7, 1, 1> = <误差项大小, 第一个优化变量大小, 第二个优化变量大小, 第三个优化变量大小, 第四个优化变量大小, 第五个优化变量大小>
+// doc: <2, 7, 7, 7, 1, 1> = <重投影误差, pose_i, pose_j, extrinsics, 逆深度, camera-imu 时间戳同步误差 td>
 class ProjectionTdFactor : public ceres::SizedCostFunction<2, 7, 7, 7, 1, 1>
 {
   public:

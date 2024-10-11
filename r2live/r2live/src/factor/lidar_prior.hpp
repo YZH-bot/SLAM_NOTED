@@ -67,8 +67,7 @@ public:
 };
 
 #if 1
-// ANCHOR:  LiDAR prior factor here.
-//; 残差维度15，优化参数维度：第一个参数块7，第二个参数块9
+// doc: 残差维度15，优化参数维度：第一个参数块7，第二个参数块9
 class LiDAR_prior_factor_15 : public ceres::SizedCostFunction<15, 7, 9>
 {
 public:

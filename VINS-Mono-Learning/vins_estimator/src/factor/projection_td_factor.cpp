@@ -15,6 +15,7 @@ ProjectionTdFactor::ProjectionTdFactor(const Eigen::Vector3d &_pts_i, const Eige
     velocity_j.x() = _velocity_j.x();
     velocity_j.y() = _velocity_j.y();
     velocity_j.z() = 0;
+    // doc: 因为 td 是以中间时刻作为基准的，所以要计算相对于中间行的偏移量，进而计算时间的偏移量，见 line 53-54
     row_i = _row_i - ROW / 2;
     row_j = _row_j - ROW / 2;
 
@@ -49,6 +50,7 @@ bool ProjectionTdFactor::Evaluate(double const *const *parameters, double *resid
 
     Eigen::Vector3d pts_i_td, pts_j_td;
 
+    // doc: td_i 和 td_j 应该是相等的，待验证
     pts_i_td = pts_i - (td - td_i + TR / ROW * row_i) * velocity_i;
     pts_j_td = pts_j - (td - td_j + TR / ROW * row_j) * velocity_j;
     Eigen::Vector3d pts_camera_i = pts_i_td / inv_dep_i;
