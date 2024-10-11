@@ -52,4 +52,4 @@
 - **VINS-mono**：[todo]
 
 ## FAST_LIO_LOCALIZATION
-- **FAST_LIO_LOCALIZATION**：[todo]
+- **FAST_LIO_LOCALIZATION**：这个库的思路比较简单，就简单说一下，其实关键就是三个 .py 节点，详细看一下注释，目前我觉得这种做法不太稳定，对于 fast-lio2 本身没有改进，只是低频估计初始的 map-to-odom 的变换，将这个变换作用到 fast-lio2 的结果上。
