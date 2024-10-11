@@ -22,7 +22,7 @@
     <!-- transform  fusion-->
     <node pkg="fast_lio_localization" type="transform_fusion.py" name="transform_fusion" output="screen" />
 
-    <!-- glbal map-->
+    <!-- doc: 发布全局点云地图 glbal map-->
     <node pkg="pcl_ros" type="pcd_to_pointcloud" name="map_publishe" output="screen"
           args="$(arg map) 5 _frame_id:=/map cloud_pcd:=/map" />
 

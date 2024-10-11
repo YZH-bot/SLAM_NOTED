@@ -114,8 +114,9 @@ def crop_global_map_in_FOV(global_map, pose_estimation, cur_odom):
 
 
 def global_localization(pose_estimation):
+    # doc: cur_scan, cur_odom 来自 fast-lio2，因为正常运行
     global global_map, cur_scan, cur_odom, T_map_to_odom
-    # 用icp配准
+    # doc: 用icp配准
     # print(global_map, cur_scan, T_map_to_odom)
     rospy.loginfo('Global localization by scan-to-map matching......')
 
@@ -126,17 +127,17 @@ def global_localization(pose_estimation):
 
     global_map_in_FOV = crop_global_map_in_FOV(global_map, pose_estimation, cur_odom)
 
-    # 粗配准
+    # doc: 粗配准
     transformation, _ = registration_at_scale(scan_tobe_mapped, global_map_in_FOV, initial=pose_estimation, scale=5)
 
-    # 精配准
+    # doc: 精配准
     transformation, fitness = registration_at_scale(scan_tobe_mapped, global_map_in_FOV, initial=transformation,
                                                     scale=1)
     toc = time.time()
     rospy.loginfo('Time: {}'.format(toc - tic))
     rospy.loginfo('')
 
-    # 当全局定位成功时才更新map2odom
+    # doc: 当全局定位成功时才更新map2odom
     if fitness > LOCALIZATION_TH:
         # T_map_to_odom = np.matmul(transformation, pose_estimation)
         T_map_to_odom = transformation
@@ -148,6 +149,7 @@ def global_localization(pose_estimation):
         map_to_odom.pose.pose = Pose(Point(*xyz), Quaternion(*quat))
         map_to_odom.header.stamp = cur_odom.header.stamp
         map_to_odom.header.frame_id = 'map'
+        # doc: 这里发布的是map2odom，是一个低频的初始位姿变换
         pub_map_to_odom.publish(map_to_odom)
         return True
     else:
@@ -165,7 +167,7 @@ def voxel_down_sample(pcd, voxel_size):
         pcd_down = o3d.geometry.voxel_down_sample(pcd, voxel_size)
     return pcd_down
 
-
+# doc: 初始化全局地图
 def initialize_global_map(pc_msg):
     global global_map
 
@@ -230,24 +232,25 @@ if __name__ == '__main__':
     # doc: publisher
     pub_pc_in_map = rospy.Publisher('/cur_scan_in_map', PointCloud2, queue_size=1)
     pub_submap = rospy.Publisher('/submap', PointCloud2, queue_size=1)
+    # info: 估计的初始位姿变换，发布给 transform_fusion.py，用于变换 fast-lio2 发布更高频的pose
     pub_map_to_odom = rospy.Publisher('/map_to_odom', Odometry, queue_size=1)
 
     # doc: subscriber
     rospy.Subscriber('/cloud_registered', PointCloud2, cb_save_cur_scan, queue_size=1)
     rospy.Subscriber('/Odometry', Odometry, cb_save_cur_odom, queue_size=1)
 
-    # 初始化全局地图
+    # doc: 初始化全局地图，由 launch 文件中的 pcl 节点发布，只需要初始化一次
     rospy.logwarn('Waiting for global map......')
     initialize_global_map(rospy.wait_for_message('/map', PointCloud2))
 
-    # 初始化
+    # doc: 初始化
     while not initialized:
         rospy.logwarn('Waiting for initial pose....')
 
-        # 等待初始位姿
+        # doc: publish_initial_pose.py 节点单独运行提供初始pose，等待初始位姿
         pose_msg = rospy.wait_for_message('/initialpose', PoseWithCovarianceStamped)
         initial_pose = pose_to_mat(pose_msg)
-        if cur_scan:
+        if cur_scan:    # doc: 接收到第一个scan才开始全局定位，cb_save_cur_scan()
             initialized = global_localization(initial_pose)
         else:
             rospy.logwarn('First scan not received!!!!!')

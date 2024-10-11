@@ -1,5 +1,6 @@
 #!/usr/bin/env python2
 # coding=utf8
+# info: 这文件是用于提供高频的全局定位的tf变换，订阅估计的odom和map_to_odom，发布全局定位的odom
 from __future__ import print_function, division, absolute_import
 
 import copy
