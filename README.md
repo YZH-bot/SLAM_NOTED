@@ -8,6 +8,7 @@
   - [LIO-SAM](#lio-sam)
   - [direct\_inertial\_lidar\_odemetry](#direct_inertial_lidar_odemetry)
   - [VINS-mono](#vins-mono)
+  - [FAST\_LIO\_LOCALIZATION](#fast_lio_localization)
 
 
 该repo主要记录对目前SLAM算法的注释版本，包括：
@@ -50,4 +51,5 @@
 ## VINS-mono
 - **VINS-mono**：[todo]
 
-
+## FAST_LIO_LOCALIZATION
+- **FAST_LIO_LOCALIZATION**：[todo]
