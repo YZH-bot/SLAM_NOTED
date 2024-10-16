@@ -5,9 +5,9 @@ void FastLioLocalizationQnClass::odomPcdCallback(const nav_msgs::OdometryConstPt
 {
   m_current_frame = PosePcd(*odom_msg, *pcd_msg, m_current_keyframe_idx); //to be checked if keyframe or not
 
-  if (!m_init) //// init only once
+  if (!m_init) // doc: init only once
   {
-    //// 1. realtime pose = last TF * odom
+    // doc: 1. realtime pose = last TF * odom
     geometry_msgs::PoseStamped current_pose_stamped_ = poseEigToPoseStamped(m_current_frame.pose_corrected_eig, m_map_frame);
     m_realtime_pose_pub.publish(current_pose_stamped_);
     tf::Transform transform_;
@@ -32,7 +32,7 @@ void FastLioLocalizationQnClass::odomPcdCallback(const nav_msgs::OdometryConstPt
   }
   else
   {
-    //// 1. realtime pose = last TF * odom
+    // doc: 1. realtime pose = last TF * odom
     m_current_frame.pose_corrected_eig = m_last_TF * m_current_frame.pose_eig;
     geometry_msgs::PoseStamped current_pose_stamped_ = poseEigToPoseStamped(m_current_frame.pose_corrected_eig, m_map_frame);
     m_realtime_pose_pub.publish(current_pose_stamped_);
@@ -43,7 +43,7 @@ void FastLioLocalizationQnClass::odomPcdCallback(const nav_msgs::OdometryConstPt
     // pub current scan in corrected pose frame
     m_corrected_current_pcd_pub.publish(pclToPclRos(transformPcd(m_current_frame.pcd, m_current_frame.pose_corrected_eig), m_map_frame));
 
-    //// 2. check if keyframe
+    // doc: 2. check if keyframe
     if (checkIfKeyframe(m_current_frame, m_last_keyframe))
     {
       // 2-2. if so, save
@@ -53,7 +53,7 @@ void FastLioLocalizationQnClass::odomPcdCallback(const nav_msgs::OdometryConstPt
         m_not_processed_keyframe = m_current_frame; //to check match in another thread
       }
       m_current_keyframe_idx++;
-      //// 3. vis
+      // 3. vis
       {
         lock_guard<mutex> lock(m_vis_mutex);
         updateVisVars(m_current_frame);
@@ -67,22 +67,22 @@ void FastLioLocalizationQnClass::matchingTimerFunc(const ros::TimerEvent& event)
 {
   if (!m_init) return;
 
-  //// 1. copy not processed keyframes
+  // doc: 1. copy not processed keyframes
   high_resolution_clock::time_point t1_ = high_resolution_clock::now();
   PosePcd not_proc_key_copy_;
   {
     lock_guard<mutex> lock(m_keyframes_mutex);
-    not_proc_key_copy_ = m_not_processed_keyframe;
+    not_proc_key_copy_ = m_not_processed_keyframe;  // doc: m_not_processed_keyframe 是来自 odomPcdCallback 函数中保存的当前帧，未处理的关键帧
     m_not_processed_keyframe.processed = true;
   }
-  if (not_proc_key_copy_.idx==0 || not_proc_key_copy_.processed) return; //already processed or initial keyframe
+  if (not_proc_key_copy_.idx==0 || not_proc_key_copy_.processed) return; // doc: already processed or initial keyframe
 
-  //// 2. detect match and calculate TF
-  // from not_proc_key_copy_ keyframe to map (saved keyframes) in threshold radius, get the closest keyframe
+  // doc: 2. detect match and calculate TF
+  // doc: 在存储的关键帧中查找与当前关键帧距离最近的一帧，返回 index； from not_proc_key_copy_ keyframe to map (saved keyframes) in threshold radius, get the closest keyframe
   int closest_keyframe_idx_ = getClosestKeyframeIdx(not_proc_key_copy_, m_saved_map);
   if (closest_keyframe_idx_ >= 0) //if exists
   {
-    // Quatro + NANO-GICP to check match (from current_keyframe to closest keyframe in saved map)
+    // doc: Quatro + NANO-GICP to check match (from current_keyframe to closest keyframe in saved map)
     bool converged_well_ = false;
     double score_;
     Eigen::Matrix4d pose_between_eig_ = Eigen::Matrix4d::Identity();
@@ -91,7 +91,7 @@ void FastLioLocalizationQnClass::matchingTimerFunc(const ros::TimerEvent& event)
 
     if(converged_well_) // TF the pose with the result of match
     {
-      //// 3. handle corrected results
+      // doc: 3. 将修正值叠加到当前关键帧中，并更新 map2odom m_last_TF； handle corrected results
       m_last_TF = pose_between_eig_ * m_last_TF; // update TF
       Eigen::Matrix4d TFed_pose_ = pose_between_eig_ * not_proc_key_copy_.pose_corrected_eig;
       // correct poses in vis data

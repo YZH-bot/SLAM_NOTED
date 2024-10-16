@@ -110,12 +110,12 @@ class FastLioLocalizationQnClass
     shared_ptr<message_filters::Subscriber<nav_msgs::Odometry>> m_sub_odom = nullptr;
     shared_ptr<message_filters::Subscriber<sensor_msgs::PointCloud2>> m_sub_pcd = nullptr;
 
-    ///// functions
+    // functions
   public:
     FastLioLocalizationQnClass(const ros::NodeHandle& n_private);
     ~FastLioLocalizationQnClass(){};
   private:
-    //methods
+    // methods
     void updateVisVars(const PosePcd& pose_pcd_in);
     void voxelizePcd(pcl::VoxelGrid<PointType>& voxelgrid, pcl::PointCloud<PointType>& pcd_in);
     bool checkIfKeyframe(const PosePcd& pose_pcd_in, const PosePcd& latest_pose_pcd);

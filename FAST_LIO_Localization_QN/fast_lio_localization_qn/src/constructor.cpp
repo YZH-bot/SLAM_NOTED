@@ -33,7 +33,7 @@ PosePcdReduced::PosePcdReduced(const geometry_msgs::PoseStamped& pose_in, const 
 
 FastLioLocalizationQnClass::FastLioLocalizationQnClass(const ros::NodeHandle& n_private) : m_nh(n_private)
 {
-  ////// ROS params
+  // doc: ROS params
   // temp vars, only used in constructor
   std::string saved_map_path_;
   double map_match_hz_;
@@ -89,13 +89,15 @@ FastLioLocalizationQnClass::FastLioLocalizationQnClass(const ros::NodeHandle& n_
   m_nano_gicp.setEuclideanFitnessEpsilon(euclidean_fitness_epsilon_);
   m_nano_gicp.setRANSACIterations(nano_ransac_max_iter_);
   m_nano_gicp.setRANSACOutlierRejectionThreshold(ransac_outlier_rejection_threshold_);
-  // quatro init
+  // doc: quatro init
   m_quatro_handler = std::make_shared<quatro<PointType>>(fpfh_normal_radius_, fpfh_radius_, noise_bound_, rot_gnc_factor_, rot_cost_diff_thr_,
                                                         quatro_max_iter_, estimat_scale_, use_optimized_matching_, quatro_distance_threshold_, quatro_max_corres_);
-  // Load map
+  // doc: Load map 预先加载地图
+  // !: Note4: saved map file is needed. The map should be in .bag format. This .bag files can be built with FAST-LIO-SAM-QN and FAST-LIO-SAM
+  // !: 比较奇怪的地图格式，而且地图貌似只是用于可视化
   loadMap(saved_map_path_);
 
-  ////// ROS things
+  // ROS things
   m_odom_path.header.frame_id = m_map_frame;
   m_corrected_path.header.frame_id = m_map_frame;
   // publishers
@@ -111,12 +113,12 @@ FastLioLocalizationQnClass::FastLioLocalizationQnClass(const ros::NodeHandle& n_
   m_debug_dst_pub = m_nh.advertise<sensor_msgs::PointCloud2>("/dst", 10);
   m_debug_coarse_aligned_pub = m_nh.advertise<sensor_msgs::PointCloud2>("/coarse_aligned_quatro", 10);
   m_debug_fine_aligned_pub = m_nh.advertise<sensor_msgs::PointCloud2>("/fine_aligned_nano_gicp", 10);
-  // subscribers
-  m_sub_odom = std::make_shared<message_filters::Subscriber<nav_msgs::Odometry>>(m_nh, "/Odometry", 10);
-  m_sub_pcd = std::make_shared<message_filters::Subscriber<sensor_msgs::PointCloud2>>(m_nh, "/cloud_registered", 10);
+  // doc: subscribers 关键：订阅消息
+  m_sub_odom = std::make_shared<message_filters::Subscriber<nav_msgs::Odometry>>(m_nh, "/Odometry", 10);  // doc: 来自 Fast-LIO 的 pose
+  m_sub_pcd = std::make_shared<message_filters::Subscriber<sensor_msgs::PointCloud2>>(m_nh, "/cloud_registered", 10); // doc: 来自 Fast-LIO 的 registerd pcd
   m_sub_odom_pcd_sync = std::make_shared<message_filters::Synchronizer<odom_pcd_sync_pol>>(odom_pcd_sync_pol(10), *m_sub_odom, *m_sub_pcd);
   m_sub_odom_pcd_sync->registerCallback(boost::bind(&FastLioLocalizationQnClass::odomPcdCallback, this, _1, _2));
-  // Timers at the end
+  // doc: Timers at the end
   m_match_timer = m_nh.createTimer(ros::Duration(1/map_match_hz_), &FastLioLocalizationQnClass::matchingTimerFunc, this);
   
   ROS_WARN("Main class, starting node...");
