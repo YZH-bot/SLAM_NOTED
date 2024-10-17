@@ -55,7 +55,9 @@
 ## FAST_LIO_LOCALIZATION
 - **FAST_LIO_LOCALIZATION**：[⌨[code详细注释]](https://github.com/YZH-bot/SLAM_NOTED/tree/master/FAST_LIO_LOCALIZATION)$~~~$[📖[Original Repository]](https://github.com/HViktorTsoi/FAST_LIO_LOCALIZATION)
 - **总结分析**：
-  - 这个库的思路比较简单，就简单说一下，其实关键就是三个 .py 节点，详细看一下注释，目前我觉得这种做法不太稳定，对于 fast-lio2 本身没有改进，只是低频估计初始的 map-to-odom 的变换，将这个变换作用到 fast-lio2 的结果上。
+  - 这个库的思路比较简单，就简单说一下，其实关键就是三个 `.py` 节点，详细看一下注释，目前我觉得这种做法不太稳定，对于 `fast-lio2` 本身没有改进，只是低频估计初始的 `map-to-odom` 的变换，将这个变换作用到 fast-lio2 的结果上。
   
 ## FAST_LIO_Localization_QN
-- **FAST_LIO_Localization_QN**：[working on]$~~~$[📖[Original Repository]](https://github.com/engcang/FAST-LIO-Localization-QN)
+- **FAST_LIO_Localization_QN**：[⌨[code详细注释]](https://github.com/YZH-bot/SLAM_NOTED/tree/master/FAST_LIO_Localization_QN)$~~~$[📖[Original Repository]](https://github.com/engcang/FAST-LIO-Localization-QN)
+- **总结分析**：
+  - 这个库的思路和 `FAST_LIO_LOCALIZATION` 不完全一样，维护了历史关键帧，通过搜寻当前关键帧最近关联帧（意味着没有回环检测，就是欧式距离法），然后进行修正，不过都对 `fast-lio2` 本身没有改进，也只是低频估计和更新初始的 `map-to-odom` 的变换（没有实现 `rviz` 设置起点功能），将这个变换作用到 `fast-lio2` 的结果上。
