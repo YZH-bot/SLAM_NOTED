@@ -10,6 +10,7 @@
   - [VINS-mono](#vins-mono)
   - [FAST\_LIO\_LOCALIZATION](#fast_lio_localization)
   - [FAST\_LIO\_Localization\_QN](#fast_lio_localization_qn)
+  - [open\_vins](#open_vins)
 
 
 该repo主要记录对目前SLAM算法的注释版本，包括：
@@ -61,3 +62,6 @@
 - **FAST_LIO_Localization_QN**：[⌨[code详细注释]](https://github.com/YZH-bot/SLAM_NOTED/tree/master/FAST_LIO_Localization_QN)$~~~$[📖[Original Repository]](https://github.com/engcang/FAST-LIO-Localization-QN)
 - **总结分析**：
   - 这个库的思路和 `FAST_LIO_LOCALIZATION` 不完全一样，维护了历史关键帧，通过搜寻当前关键帧最近关联帧（意味着没有回环检测，就是欧式距离法），然后进行修正，不过都对 `fast-lio2` 本身没有改进，也只是低频估计和更新初始的 `map-to-odom` 的变换（没有实现 `rviz` 设置起点功能），将这个变换作用到 `fast-lio2` 的结果上。
+
+## open_vins
+- **open_vins**：[working on]$~~~$[📖[Original Repository]](https://github.com/rpng/open_vins)
