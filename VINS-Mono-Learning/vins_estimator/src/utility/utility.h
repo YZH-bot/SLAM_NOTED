@@ -8,6 +8,7 @@
 class Utility
 {
   public:
+    // 这里和ceres原本实现的QuaternionPlusImpl不一样，ceres没有将角度除以2,这里暂时还没找到原因，按理来说是要除以2的
     template <typename Derived>
     static Eigen::Quaternion<typename Derived::Scalar> deltaQ(const Eigen::MatrixBase<Derived> &theta)
     {
